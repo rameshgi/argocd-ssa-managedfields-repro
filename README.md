@@ -23,7 +23,8 @@ object no longer matches Git, and Argo CD still reports `Synced/Healthy` both be
 sync. Nothing in its UI or status shows the difference.
 
 **Interactive walkthrough:** <https://rameshgi.github.io/argocd-ssa-managedfields-repro/> (source:
-[`docs/index.html`](docs/index.html)). Click through the timeline one change at a time. Three panels
+[`docs/index.html`](docs/index.html)). It opens on the container scenario (`demo-container`); the
+other namespaces are one click away. Click through the timeline one change at a time. Three panels
 show the manifest in Git, the object in the cluster, and the field managers with how many fields each
 one owns. For Argo CD steps, a strip shows how Argo CD builds the desired state and applies it. Every
 value comes from the captured run.

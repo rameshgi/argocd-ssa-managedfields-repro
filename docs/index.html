@@ -147,27 +147,28 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
 <body>
 <div class="wrap">
   <header>
-    <h1>How a change deleted from Git silently survives an Argo CD sync</h1>
-    <p>Argo CD creates a Deployment with server-side apply. During an incident, someone changes it with kubectl: a CPU limit
-      (<code>demo-drift</code>) or a re-created container (<code>demo-container</code>). Later Git deletes what was changed,
-      Argo CD reports <b>Synced</b>, and the cluster keeps the change: <b>Argo CD's diff hides the drift</b>. Click through
+    <h1>How a container deleted from Git silently survives an Argo CD sync</h1>
+    <p>Argo CD creates a multi-container Deployment with server-side apply. During an incident, on-call removes the
+      crash-looping <code>feature-cache</code> container with kubectl and, after the fix, adds it back. Later Git deletes that
+      container, Argo CD reports <b>Synced</b>, and the container keeps running: <b>Argo CD's diff hides the drift</b>. The
+      same happens to a single field changed with kubectl (<code>demo-drift</code>, a CPU limit). Click through
       the timeline one change at a time. Three panels show the <b>manifest in Git</b>, the <b>object in the cluster</b>, and
       the <b>field managers</b> in <code>metadata.managedFields</code>. For Argo CD steps, the strip shows how Argo CD builds
       the desired state and applies it. All data is real API-server output from the
       <a href="https://github.com/rameshgi/argocd-ssa-managedfields-repro">test bed</a>.</p>
     <p class="small">Based on <a href="https://www.linkedin.com/blog/engineering/infrastructure/how-we-scale-deployments-with-a-custom-gitops-engine"><i>How we scale deployments with a custom GitOps engine</i></a>
       by Ramesh G. Iyer. The post attributes the loss of ownership to managedFields compaction. This test bed shows that
-      ownership moves earlier, when kubectl changes the value; compaction then hides who owns the field
+      ownership moves earlier, when kubectl changes the field or re-creates the container; compaction then hides who owns the field
       (<code>demo-compacted</code>). <span id="versions"></span></p>
   </header>
 
   <section class="tl" aria-label="Timeline">
     <div class="tl-top">
       <div class="seg" role="group" aria-label="Namespace">
-        <button data-ns="drift" aria-pressed="true">demo-drift (field)</button>
+        <button data-ns="container" aria-pressed="true">demo-container (container)</button>
+        <button data-ns="drift" aria-pressed="false">demo-drift (CPU limit)</button>
         <button data-ns="resync" aria-pressed="false">demo-resync (control)</button>
         <button data-ns="compacted" aria-pressed="false">demo-compacted (owner hidden)</button>
-        <button data-ns="container" aria-pressed="false">demo-container (container)</button>
         <button data-ns="put" aria-pressed="false">demo-put (PUT fix)</button>
       </div>
       <span class="hint">← → step · c switch namespace · click a manager to highlight its fields</span>
@@ -410,7 +411,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
   }
 
   // ---------------- rendering ----------------
-  const state = { key: "drift", i: 0, sel: null };
+  const state = { key: "container", i: 0, sel: null };
   let seq = [];
   try {
     const h = /step=(\d+)/.exec(location.hash); if (h) state.i = +h[1] - 1;
@@ -539,7 +540,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
   $("prev").onclick = () => go(state.i - 1);
   $("next").onclick = () => go(state.i + 1);
   document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => setNs(b.dataset.ns)));
-  const order = ["drift", "resync", "compacted", "container", "put"];
+  const order = ["container", "drift", "resync", "compacted", "put"];
   document.addEventListener("keydown", e => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.key === "ArrowRight") go(state.i + 1);
