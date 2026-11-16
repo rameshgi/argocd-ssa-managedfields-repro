@@ -1,0 +1,20 @@
+# Rendered by scripts/05-create-apps.sh with ${NAMESPACE} substituted.
+# Manual sync (no automated policy) so the scripts control exactly when Argo CD
+# applies; sync options are passed on each sync operation as well.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ranker-${NAMESPACE}
+  namespace: argocd
+spec:
+  project: ssa-repro
+  source:
+    repoURL: file:///repro-git/manifests.git
+    targetRevision: main
+    path: apps/ranker
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${NAMESPACE}
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true

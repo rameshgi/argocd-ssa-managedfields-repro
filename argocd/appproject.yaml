@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ssa-repro
+  namespace: argocd
+spec:
+  description: Repro for managedFields compaction vs. Argo CD server-side apply
+  sourceRepos:
+    - file:///repro-git/*
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: demo-*
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment

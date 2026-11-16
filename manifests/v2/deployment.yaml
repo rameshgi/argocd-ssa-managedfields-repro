@@ -1,0 +1,28 @@
+# v2: identical to v1 except the `feature-cache` container has been REMOVED.
+# After Argo CD syncs this with ServerSideApply=true, the live Deployment
+# should have exactly two containers.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ranker
+  labels:
+    app: ranker
+spec:
+  selector:
+    matchLabels:
+      app: ranker
+  template:
+    metadata:
+      labels:
+        app: ranker
+    spec:
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: retriever
+          image: registry.k8s.io/pause:3.10
+          resources:
+            requests: {cpu: 5m, memory: 8Mi}
+        - name: ranker
+          image: registry.k8s.io/pause:3.10
+          resources:
+            requests: {cpu: 5m, memory: 8Mi}
