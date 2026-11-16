@@ -1,13 +1,20 @@
 # Argo CD + server-side apply: zombie containers after `managedFields` compaction
 
-This repo reproduces, end to end on a local [kind](https://kind.sigs.k8s.io/) cluster, a
-failure mode described in LinkedIn's engineering post
+## Starting point
+
+This repo started from the LinkedIn Engineering blog post
 [*How we scale deployments with a custom GitOps engine*](https://www.linkedin.com/blog/engineering/infrastructure/how-we-scale-deployments-with-a-custom-gitops-engine)
-(section "Side-effects of PATCH"):
+by **Ramesh G. Iyer**, who also wrote this test bed. Its "Side-effects of PATCH" section describes a
+problem LinkedIn ran into while running Argo CD with server-side apply at scale:
 
 > When managedFields compaction occurs on these objects, the ownership information of some
 > containers may be lost. … the PATCH operation leaves the containers as they are, because
 > they appear to be owned externally.
+
+The post describes the symptom from production. This repo is a minimal, self-contained way for
+Argo CD maintainers to reproduce it, end to end, on a local [kind](https://kind.sigs.k8s.io/) cluster.
+It pins down the exact mechanism: Kubernetes compacts `managedFields`, and as a result Argo CD
+silently skips its client-side-apply → server-side-apply migration.
 
 **Result:** a container removed from Git keeps running in the cluster, and Argo CD reports
 the Application as `Synced/Healthy`. Argo CD's diff never shows it as drift.
