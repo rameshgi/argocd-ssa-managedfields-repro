@@ -44,12 +44,12 @@ status_after_step7() { # ns
 note() { put_resynced "$1" && echo "(since cleaned by step 08 PUT; now: $(field_value "$1"))" || true; }
 
 step "Result of the server-side-apply sync of v2: what Git deleted vs. what stayed live"
-printf '    %-16s %-24s %-12s %-24s %s\n' NAMESPACE "DELETED IN GIT" "STILL LIVE" "OWNER" "NOTE"
+printf '    %-16s %-24s %-12s %-18s %-24s %s\n' NAMESPACE "DELETED IN GIT" "STILL LIVE" "ARGO SYNC/HEALTH" "OWNER" "NOTE"
 for ns in "${FIELD_NS[@]}"; do
-  printf '    %-16s %-24s %-12s %-24s %s\n' "${ns}" "retriever limits.cpu" "$(after_step7 "${ns}")" "$(owner_after_step7 "${ns}")" "$(note "${ns}")"
+  printf '    %-16s %-24s %-12s %-18s %-24s %s\n' "${ns}" "retriever limits.cpu" "$(after_step7 "${ns}")" "$(status_after_step7 "${ns}")" "$(owner_after_step7 "${ns}")" "$(note "${ns}")"
 done
 ns="${NS_CONTAINER}"; live="$(live_containers "${ns}" | tr ',' '\n' | grep -qx "${SIDECAR}" && echo yes || echo no)"
-printf '    %-16s %-24s %-12s %-24s %s\n' "${ns}" "container ${SIDECAR}" "${live}" "$(container_owners "${ns}" "${SIDECAR}")" ""
+printf '    %-16s %-24s %-12s %-18s %-24s %s\n' "${ns}" "container ${SIDECAR}" "${live}" "$(app_status "ranker-${ns}")" "$(container_owners "${ns}" "${SIDECAR}")" ""
 echo
 for ns in "${FIELD_NS[@]}"; do
   v="$(after_step7 "${ns}")"

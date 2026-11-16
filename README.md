@@ -483,8 +483,8 @@ item when all of the following hold:
 **Reported as a non-blocking application condition, not `OutOfSync`.** Removing a field from Git can be
 an intentional hand-off. Argo CD's own docs recommend it in
 [Leaving Room For Imperativeness](https://argo-cd.readthedocs.io/en/stable/user-guide/best_practices/#leaving-room-for-imperativeness):
-delete `spec.replicas` from Git so that an HPA owns it. Right after that commit, `spec.replicas` meets
-the first three conditions: it was synced before, it is no longer in Git, and the HPA (via
+delete `spec.replicas` from Git so that an HPA owns it. Once the HPA has scaled the Deployment, `spec.replicas`
+meets the first three conditions: it was synced before, it is no longer in Git, and the HPA (via
 `kube-controller-manager`) owns it.
 - If the path is listed in `ignoreDifferences`, the fourth condition excludes it.
 - If it isn't, a condition that names the field and its owner (`spec.replicas` owned by
