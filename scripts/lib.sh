@@ -39,6 +39,17 @@ die()  { bad "$*"; exit 1; }
 
 deploy_json() { k -n "$1" get deploy "${DEPLOY}" -o json --show-managed-fields; }
 
+# Save the live Deployment (+ the Application's sync/health, if any) for the
+# README timeline. See scripts/render-timeline.sh.
+SNAP_DIR="${WORK_DIR}/snapshots"
+snapshot() { # label ns [note]
+  local argo
+  mkdir -p "${SNAP_DIR}"
+  argo="$(k -n argocd get app "ranker-$2" -o jsonpath='{.status.sync.status}/{.status.health.status}' 2>/dev/null || true)"
+  deploy_json "$2" | jq --arg argo "${argo}" --arg note "${3:-}" '. + {_argo: $argo, _note: $note}' \
+    > "${SNAP_DIR}/$1.$2.json"
+}
+
 # Print the managedFields table for the Deployment in namespace $1.
 show_managers() {
   local ns="$1"

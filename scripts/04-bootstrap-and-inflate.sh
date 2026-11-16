@@ -48,11 +48,17 @@ bootstrap() { # ns
 
 inflate() { # ns mode(control|compact)
   local NS="$1" mode="$2" entry mgr cmd n
+  prev_mgrs=""; last_mgr=""
   for entry in "${VERBS[@]}"; do
     n="$(update_manager_count "${NS}")"
     if [[ "${mode}" == control && ${n} -ge 8 ]]; then break; fi
     if [[ "${mode}" == compact ]] && ! has_manager "${NS}" "${CSA_MANAGER}" Update; then break; fi
     mgr="${entry%%|*}"; cmd="${entry#*|}"
+    # Remember the state right before each verb; after the loop this holds the
+    # state just before the verb that triggered compaction.
+    [[ "${mode}" == compact ]] && snapshot 2-before-compaction "${NS}" "${prev_mgrs:-}"
+    prev_mgrs="${prev_mgrs:+${prev_mgrs}, }${mgr}"
+    last_mgr="${mgr}"
     sleep 1.1   # managedFields timestamps have 1s resolution; keep ordering unambiguous
     eval "${cmd}" >/dev/null
     info "$(printf '%-24s -> Update managers: %2s   %s entry present: %s' \
@@ -64,6 +70,7 @@ inflate() { # ns mode(control|compact)
 step "Bootstrapping Deployments with client-side kubectl apply"
 bootstrap "${NS_CONTROL}"
 bootstrap "${NS_COMPACTED}"
+snapshot 1-csa-apply "${NS_COMPACTED}"
 
 step "${NS_CONTROL}: adding field managers, staying under the cap"
 inflate "${NS_CONTROL}" control
@@ -74,6 +81,7 @@ step "${NS_COMPACTED}: adding field managers until the API server compacts manag
 inflate "${NS_COMPACTED}" compact
 has_manager "${NS_COMPACTED}" "${CSA_MANAGER}" Update \
   && die "ran out of verbs before compaction happened" || ok "${CSA_MANAGER} entry is GONE (merged into ancient-changes)"
+snapshot 3-after-compaction "${NS_COMPACTED}" "${last_mgr}"
 
 step "${NS_COMPACTED}: managedFields after compaction"
 show_managers "${NS_COMPACTED}"

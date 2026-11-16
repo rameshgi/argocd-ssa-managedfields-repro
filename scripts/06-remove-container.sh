@@ -10,6 +10,7 @@ step "Syncing v2 (${sha:0:8}) with ServerSideApply=true"
 for ns in "${NS_CONTROL}" "${NS_COMPACTED}"; do
   app_refresh "ranker-${ns}" "${sha}"
   info "ranker-${ns} before sync: $(app_status "ranker-${ns}")"
+  snapshot 5-v2-committed "${ns}"
   app_sync "ranker-${ns}" "${sha}"
   ok "ranker-${ns}: sync operation Succeeded"
 done
@@ -18,3 +19,4 @@ for ns in "${NS_CONTROL}" "${NS_COMPACTED}"; do
   k -n argocd annotate app "ranker-${ns}" argocd.argoproj.io/refresh=hard --overwrite >/dev/null
 done
 sleep 10
+for ns in "${NS_CONTROL}" "${NS_COMPACTED}"; do snapshot 6-argo-sync-v2 "${ns}"; done

@@ -24,6 +24,7 @@ for ns in "${NS_CONTROL}" "${NS_COMPACTED}"; do
   app_sync "ranker-${ns}" "${sha}"
   sleep 3
   ok "ranker-${ns}: $(app_status "ranker-${ns}")"
+  snapshot 4-argo-sync-v1 "${ns}"
 done
 
 for ns in "${NS_CONTROL}" "${NS_COMPACTED}"; do
