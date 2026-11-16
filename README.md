@@ -438,7 +438,7 @@ while Argo CD reports `Synced`. Scripted at commit
 
 The engine described in the blog post takes this approach: **no PATCH, only PUT**. Each deployment is
 authoritative for the parts of the object it owns, and the object is written with full-replacement
-semantics. The post credits Scott Nichols for the PUT semantics. Testing it against Argo CD shows
+semantics. Testing it against Argo CD shows
 that most of the pieces already exist:
 
 | Step | Design in the blog post | Argo CD v3.6.1 today |
