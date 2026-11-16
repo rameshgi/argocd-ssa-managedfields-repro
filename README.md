@@ -29,6 +29,16 @@ show the manifest in Git, the object in the cluster, and the field managers with
 one owns. For Argo CD steps, a strip shows how Argo CD builds the desired state and applies it. Every
 value comes from the captured run.
 
+Click a screenshot to open the live page at that step. To regenerate the screenshots after a run, use `scripts/helpers/screenshots.sh`.
+
+| Simulation | Step | What it shows | Screenshot |
+|---|---|---|---|
+| `demo-container` | 5 | Argo CD syncs after Git deleted `feature-cache`. The container on-call re-created during the incident is still running, owned by `kubectl-patch`, and Argo CD reports `Synced/Healthy`. | <a href="https://rameshgi.github.io/argocd-ssa-managedfields-repro/#step=5&ns=container"><img src="docs/img/container.png" width="420" alt="container at step 5"></a> |
+| `demo-drift` | 3 | Git deletes `retriever`'s CPU limit. Before any sync, Argo CD flips from `OutOfSync` to `Synced`: the dry run keeps `limits.cpu: 2`, owned by `kubectl-set`. | <a href="https://rameshgi.github.io/argocd-ssa-managedfields-repro/#step=3&ns=drift"><img src="docs/img/drift.png" width="420" alt="drift at step 3"></a> |
+| `demo-resync` (control) | 5 | Argo CD re-synced before the Git change and took the field back, so the sync removes the CPU limit as Git says. | <a href="https://rameshgi.github.io/argocd-ssa-managedfields-repro/#step=5&ns=resync"><img src="docs/img/resync.png" width="420" alt="resync at step 5"></a> |
+| `demo-compacted` | 12 | The 11th `Update` manager triggers compaction. `kubectl-set` is merged into `ancient-changes`, which now owns the CPU limit. | <a href="https://rameshgi.github.io/argocd-ssa-managedfields-repro/#step=12&ns=compacted"><img src="docs/img/compacted.png" width="420" alt="compacted at step 12"></a> |
+| `demo-put` | 6 | `Replace=true` + `RespectIgnoreDifferences=true`: the drifted CPU limit is removed, and the declared `replicas` and labels are kept. | <a href="https://rameshgi.github.io/argocd-ssa-managedfields-repro/#step=6&ns=put"><img src="docs/img/put.png" width="420" alt="put at step 6"></a> |
+
 **Result** (summarised from `scripts/verify.sh`, after Argo CD synced v2 everywhere):
 
 | Namespace | Deleted in Git | Still live | Argo CD | Owner in `managedFields` | Verdict |
@@ -413,6 +423,7 @@ Last sync operation: revision `72f32706`, Succeeded, finished `07:06:57`, option
 | `scripts/07-sync.sh` | Sync v2 in every namespace |
 | `scripts/verify.sh` | Print the verdict. Exits 0 if the bug reproduced. With `EXPECT_FIXED=1`, exits 0 only if Git's deletions took effect everywhere, for testing a patch |
 | `scripts/08-replace-sync.sh` | Contrast: re-sync `demo-compacted` with `Replace=true`, and `demo-put` with `Replace=true` + `RespectIgnoreDifferences=true` |
+| `scripts/helpers/screenshots.sh` | Regenerate the README screenshots of the interactive page (`docs/img/`). Needs Chrome or Chromium |
 | `scripts/render-timeline.sh` | Regenerate the [timeline](#timeline) and `docs/snapshots.js` from `.work/snapshots/` |
 | `scripts/run-all.sh` | All of the above. Re-runnable: it reuses the cluster and recreates the demo state |
 | `scripts/cluster-down.sh` | Delete the cluster and `.work/` |
