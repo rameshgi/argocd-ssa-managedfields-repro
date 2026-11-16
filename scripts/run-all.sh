@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end reproduction. Safe to re-run: the cluster is reused if present,
-# but the demo namespaces/apps are recreated from scratch.
+# but the demo namespaces/apps and the Git repo are recreated from scratch.
 source "$(dirname "$0")/lib.sh"
 D="$(dirname "$0")"
 
@@ -9,16 +9,17 @@ D="$(dirname "$0")"
 "${D}/02-install-argocd.sh"
 
 step "Resetting demo state"
-k -n argocd delete app "ranker-${NS_CONTROL}" "ranker-${NS_COMPACTED}" --ignore-not-found --wait >/dev/null
-k delete namespace "${NS_CONTROL}" "${NS_COMPACTED}" --ignore-not-found --wait >/dev/null
+for app in $(k -n argocd get app -o name 2>/dev/null); do k -n argocd delete "${app}" --wait >/dev/null; done
+for ns in $(k get ns -o name | grep '^namespace/demo-' || true); do k delete "${ns}" --wait >/dev/null; done
+rm -rf "${SNAP_DIR}"
 ok "clean"
 
-rm -rf "${SNAP_DIR}"
 "${D}/03-seed-git.sh"
-"${D}/04-bootstrap-and-inflate.sh"
-"${D}/05-create-apps.sh"
-"${D}/06-remove-container.sh"
+"${D}/04-create-apps.sh"
+"${D}/05-incident.sh"
+"${D}/06-git-drop-field.sh"
+"${D}/07-sync.sh"
 "${D}/verify.sh" || rc=$?
-"${D}/07-replace-sync.sh"
+"${D}/08-replace-sync.sh"
 "${D}/render-timeline.sh"
 exit "${rc:-0}"

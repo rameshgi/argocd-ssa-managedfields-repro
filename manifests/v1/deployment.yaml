@@ -1,9 +1,8 @@
-# v1: a multi-container "retrieval + ranking" pod (the shape described in the
-# LinkedIn post). The `feature-cache` container is the one that will be
-# removed from Git in v2.
+# v1: a multi-container "retrieval + ranking" Deployment, created and managed
+# by Argo CD with server-side apply. retriever has a CPU limit of 500m.
 #
 # NOTE: `replicas` is intentionally omitted so that `kubectl scale` (one of the
-# field managers we add) does not fight with Argo CD over spec.replicas.
+# day-2 field managers) does not fight with Argo CD over spec.replicas.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,15 +23,10 @@ spec:
         - name: retriever
           image: registry.k8s.io/pause:3.10
           resources:
-            requests: {cpu: 5m, memory: 8Mi}
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 500m, memory: 64Mi}
         - name: ranker
           image: registry.k8s.io/pause:3.10
           resources:
-            requests: {cpu: 5m, memory: 8Mi}
-        - name: feature-cache
-          image: registry.k8s.io/pause:3.10
-          env:
-            - name: CACHE_MODE
-              value: legacy
-          resources:
-            requests: {cpu: 5m, memory: 8Mi}
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 500m, memory: 64Mi}

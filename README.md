@@ -1,59 +1,80 @@
-# Argo CD + server-side apply: zombie containers after `managedFields` compaction
+# Argo CD + server-side apply: fields deleted from Git silently survive in the cluster
 
 ## Starting point
 
 This repo started from the LinkedIn Engineering blog post
 [*How we scale deployments with a custom GitOps engine*](https://www.linkedin.com/blog/engineering/infrastructure/how-we-scale-deployments-with-a-custom-gitops-engine)
 by **Ramesh G. Iyer**, who also wrote this test bed. Its "Side-effects of PATCH" section describes a
-problem LinkedIn ran into while running Argo CD with server-side apply at scale:
+problem LinkedIn hit in production while running Argo CD with server-side apply at scale:
 
 > When managedFields compaction occurs on these objects, the ownership information of some
 > containers may be lost. … the PATCH operation leaves the containers as they are, because
 > they appear to be owned externally.
 
-The post describes this as lost ownership. More precisely, ownership is merged into
-`ancient-changes` and only the original manager's name is lost. That is exactly why the
-container survives.
+At LinkedIn, Argo CD creates every object with server-side apply. Afterwards, operators,
+controllers and on-call engineers mitigating incidents change the objects with kubectl. Later, a
+field is deleted from Git, and Argo CD leaves it in the cluster.
 
-The post describes the symptom from production. This repo is a minimal, self-contained way for
-Argo CD maintainers to reproduce it, end to end, on a local [kind](https://kind.sigs.k8s.io/) cluster.
-It isolates a concrete mechanism that produces this symptom: Kubernetes compacts `managedFields`,
-and as a result Argo CD silently skips its client-side-apply → server-side-apply migration. Other
-paths to the same symptom may exist. Any `Update` manager that co-owns a field Argo CD stops
-applying keeps that field alive, with or without compaction.
+This repo reproduces that, end to end, on a local [kind](https://kind.sigs.k8s.io/) cluster. It also
+pins down the mechanism more precisely than the post does. Argo CD loses ownership **at the moment
+kubectl changes the field's value**, not at compaction. Compaction only replaces the real owner's
+name with `ancient-changes`, which hides who changed the field and when.
+
+**The danger: Argo CD's desired-state generation leaves the object drifted, silently.** After the
+incident, Argo CD correctly shows `OutOfSync`. Then the Git commit that deletes the field flips the
+app to `Synced`, **without any sync and with the drifted value still live**. The following sync
+succeeds and changes nothing. Nothing in Argo CD's UI or status shows that the cluster no longer
+matches Git.
 
 **Interactive walkthrough:** <https://rameshgi.github.io/argocd-ssa-managedfields-repro/> (source:
-[`docs/index.html`](docs/index.html)). Click through the timeline one change at a time: each kubectl
-command, each Argo CD sync, the Git commit. Three panels show the manifest in Git, the object in
-the cluster, and the field managers with how many fields each one owns. For Argo CD steps, a strip
-shows how Argo CD builds the desired state and applies it: render, CSA→SSA migration check, desired
-state, API-server merge, compare. Every value comes from the captured run.
+[`docs/index.html`](docs/index.html)). Click through the timeline one change at a time. Three panels
+show the manifest in Git, the object in the cluster, and the field managers with how many fields each
+one owns. For Argo CD steps, a strip shows how Argo CD builds the desired state and applies it. Every
+value comes from the captured run.
 
-**Result:** a container removed from Git keeps running in the cluster, and Argo CD reports
-the Application as `Synced/Healthy`. Argo CD's diff never shows it as drift.
+**Result:**
 
 ```
-==> Result
-    NAMESPACE        LIVE CONTAINERS                    ARGO SYNC/HEALTH   OWNERS OF feature-cache
-    demo-control     retriever,ranker                   Synced/Healthy     -
-    demo-compacted   retriever,ranker,feature-cache     Synced/Healthy     ancient-changes (Update)
+==> Result: Git no longer sets spec.template.spec.containers[name=retriever].resources.limits.cpu
+    NAMESPACE        LIVE VALUE   ARGO SYNC/HEALTH   OWNER OF THE FIELD
+    demo-drift       2            Synced/Healthy     kubectl-set (Update)
+    demo-resync      <absent>     Synced/Healthy
+    demo-compacted   2            Synced/Healthy     ancient-changes (Update)
 
-    ✔ demo-control: 'feature-cache' was removed, as Git says
-    ✘ demo-compacted: 'feature-cache' is still running although it is no longer in Git  <== BUG
-    ✘ demo-compacted: ...and Argo CD reports the Application as Synced
+    ✘ demo-drift: retriever still runs with limits.cpu=2, which is not in Git, and Argo CD says Synced/Healthy  <== SILENT DRIFT
+    ✔ demo-resync: CPU limit removed, as Git says
+    ✘ demo-compacted: retriever still runs with limits.cpu=2, which is not in Git, and Argo CD says Synced/Healthy  <== SILENT DRIFT
 ```
 
 Tested with Argo CD **v3.6.1** (`quay.io/argoproj/argocd:v3.6.1`) on Kubernetes **v1.37.0**
 (`kindest/node:v1.37.0`, kind v0.33.0).
+
+## The scenario
+
+Every namespace runs the same Deployment, `ranker`, with two containers. Argo CD creates it from
+Git with `ServerSideApply=true`.
+
+1. **Argo CD creates the object.** `argocd-controller` (operation `Apply`) owns every field in the
+   manifest, including `retriever`'s `resources.limits.cpu: 500m`.
+2. **Incident.** On-call runs
+   `kubectl set resources deploy/ranker -c retriever --limits=cpu=2`. Argo CD shows `OutOfSync`.
+3. **Git deletes `retriever`'s CPU limit**, a common cleanup ("don't set CPU limits").
+4. **Argo CD syncs.**
+
+| Namespace | Between steps 2 and 3 | After step 3 (no sync yet) | After step 4 |
+|---|---|---|---|
+| `demo-drift` | nothing | **Synced**, `limits.cpu=2` live | **Synced/Healthy**, `limits.cpu=2` live ✘ |
+| `demo-resync` (control) | Argo CD syncs v1 again (redeploy or self-heal) | OutOfSync | CPU limit removed ✔ |
+| `demo-compacted` | routine day-2 operations push the object past 10 `Update` managers | **Synced**, `limits.cpu=2` live | **Synced/Healthy**, `limits.cpu=2` live, owner `ancient-changes` ✘ |
 
 ## Quick start
 
 Prerequisites: `docker` (Docker Desktop, OrbStack or colima), `kind`, `kubectl`, `jq`, `git`.
 
 ```bash
-make repro        # == scripts/run-all.sh: cluster + Argo CD + both scenarios + verdict (~3 min)
+make repro        # == scripts/run-all.sh: cluster + Argo CD + all scenarios + verdict (~4 min)
 make verify       # print the verdict again
-make timeline     # regenerate the README timeline from the last run's snapshots
+make timeline     # regenerate the README timeline and docs/snapshots.js from the last run
 make down         # delete the kind cluster and .work/
 ```
 
@@ -65,651 +86,263 @@ writing the Application's `.operation` field.
 > colima users: the repo has to be under `$HOME`, because colima only shares that
 > directory with its VM by default.
 
-## Background: what the API server actually does
+## Why it happens
 
-In [`capmanagers.go`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/capmanagers.go) (Kubernetes v1.37.0, unchanged since at least v1.34),
-the API server keeps at most [`DefaultMaxUpdateManagers = 10`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/fieldmanager.go#L35) `managedFields` entries with
-**`operation: Update`**. The cap is checked on every Update. When an object has more than 10
-such entries, the API server sorts them by timestamp and **merges the oldest ones** into one
-entry named **`ancient-changes`**. That entry holds the union of their field sets.
+**1. A kubectl change takes the field away from Argo CD.** In
+[server-side apply](https://kubernetes.io/docs/reference/using-api/server-side-apply/), every write
+records which manager owns which fields in `metadata.managedFields`. An imperative write (`kubectl
+set`, `edit`, `patch`, `replace`, `scale`, …) is an `Update` operation. When an `Update` changes a
+field's value, the API server makes the writer the owner of that field and removes it from every
+other manager's set. After the incident, `kubectl-set` owns `limits.cpu`, and `argocd-controller`
+no longer does.
 
-Three details matter for this bug:
+**2. A server-side apply only deletes fields the applier owns.** When Argo CD applies a manifest
+that no longer contains `limits.cpu`, the API server deletes the field only if `argocd-controller`
+owns it. `kubectl-set` owns it, so it stays. This is documented server-side-apply behaviour, and
+it is exactly why a PATCH cannot guarantee "the object equals Git".
 
-* The cap only counts **Update** entries. `Apply` entries (server-side apply, which is what
-  Argo CD uses with `ServerSideApply=true`) are never merged.
-* The merged fields are kept, but **the original manager's name is lost**. Any code that
-  looks up a specific manager by name stops finding it.
-* Every imperative kubectl verb registers its own manager: `kubectl-label`, `kubectl-annotate`,
-  `kubectl-patch`, `kubectl-set`, `kubectl-rollout`, `kubectl-edit`, `kubectl-replace`,
-  `kubectl` (the scale subresource). So do controllers, such as `kube-controller-manager` on
-  `status`, and any tool that passes `--field-manager`. Reaching 11 is easy.
+**3. Argo CD's desired state is "whatever server-side apply would produce", not Git.** With
+`ServerSideApply=true`, Argo CD enables server-side diff
+([`controller/state.go:1184`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/controller/state.go#L1184)).
+Server-side diff computes the predicted object with a dry-run server-side apply of the Git manifest
+([`gitops-engine/pkg/diff/diff.go:177`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L177))
+and compares it with the live object. The dry run keeps `limits.cpu: 2`, so prediction and live are
+equal. In addition,
+[`diff.go:286-290`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L286-L290)
+explicitly drops removals of fields `argocd-controller` doesn't own ("SSA only removes fields the
+applier owned … so it is not a diff"). The result is `Synced`. The sync
+([`sync_context.go:1485`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1485))
+sends the same PATCH and gets the same result.
 
-## Root cause in Argo CD
+**4. When it heals by accident.** Argo CD applies with `force-conflicts`
+([`resource_ops.go:496`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/utils/kube/resource_ops.go#L496)).
+Any sync that still has the field in Git takes ownership back (`demo-resync`). The drift therefore
+survives exactly when the *next* change to that field in Git is its deletion. That is common in
+production: self-heal is often off, deployments go through approvals, and incident changes are
+rarely reverted before the next deployment.
 
-The Argo CD code that depends on a manager's name is the **client-side-apply → server-side-apply
-migration**. It runs on every SSA sync. The links point at commit [`94037c4d`](https://github.com/argoproj/argo-cd/tree/94037c4d4e1af4bd0651d37a179fbd9e347e668c), which is tag `v3.6.1`:
+**5. Compaction hides the evidence.** The API server keeps at most 10 `managedFields` entries with
+`operation: Update`
+([`capmanagers.go`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/capmanagers.go),
+[`DefaultMaxUpdateManagers = 10`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/fieldmanager.go#L35),
+unchanged since at least v1.34). Beyond that, it merges the oldest entries into one named
+`ancient-changes`. Busy production objects reach that quickly: status writers, controllers and every
+kubectl verb each count as a separate manager. The outcome is unchanged (`demo-compacted` =
+`demo-drift`), but the object no longer records who set the value or when. That makes the drift hard
+to diagnose.
 
-* [`gitops-engine/pkg/sync/sync_context.go:1456`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1456): before applying, `applyObject` calls
-  `needsClientSideApplyMigration(t.liveObj, sc.clientSideApplyMigrationManager)`.
-* [`gitops-engine/pkg/sync/sync_context.go:1341-1354`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1341-L1354): that function returns true only when
-  an entry has `field.Manager == "kubectl-client-side-apply"` **and**
-  `field.Operation == Update`. The manager name defaults to
-  `DefaultClientSideApplyMigrationManager` ([`gitops-engine/pkg/sync/common/types.go:58`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/common/types.go#L58)).
-  The `argocd.argoproj.io/client-side-apply-migration-manager` annotation can override it.
-* [`gitops-engine/pkg/sync/sync_context.go:1398`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1398): when the function returns true,
-  `csaupgrade.UpgradeManagedFieldsPatch` moves that manager's fields to `argocd-controller`.
-  Argo CD then owns the containers and can remove them later.
-
-Once compaction has renamed the `kubectl-client-side-apply` entry to `ancient-changes`, the
-lookup misses and the migration is silently skipped:
-
-1. Argo CD's first SSA sync makes `argocd-controller` (Apply) a **co-owner** of
-   `feature-cache`. The container's other owner is `ancient-changes` (Update).
-2. The container is removed from Git, and Argo CD applies the new manifest. SSA drops
-   `argocd-controller`'s claim on the container. `ancient-changes` still owns it, so the
-   API server **keeps the container**. This is correct SSA behaviour.
-3. Server-side diff ([`gitops-engine/pkg/diff/diff.go:172`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L172), `serverSideDiff` /
-   [`removeWebhookMutation`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L226)) works from a dry-run SSA. The dry run predicts the same
-   outcome: the container stays. The predicted live state therefore equals the live state,
-   and the app is **`Synced` both before and after the sync**. In the control namespace, the
-   same Git change shows `OutOfSync` as expected.
-
-The objects that hit this are common. Anything created with client-side `kubectl apply` gets a
-`kubectl-client-side-apply` entry: bootstrap scripts, CI, migration tooling, or a human. If that
-object then gathers 10 more Update managers before Argo CD adopts it with `ServerSideApply=true`,
-it is affected. In this repro, eight routine kubectl operations, plus the controller's own `status`
-entry, were enough to trigger compaction.
-
-## Timeline: how the container survives its deletion
+## Timeline: how the field survives its deletion
 
 <!-- timeline:start -->
-Every block below is a snapshot of the live `demo-compacted/ranker` Deployment, captured by
-`scripts/run-all.sh` and rendered by `scripts/render-timeline.sh`. Expand a step to see the
-container spec and `metadata.managedFields` at that moment. 🧟 marks the `feature-cache`
-container: it is deleted from Git in step 5, but it survives step 6.
+Each block below is a snapshot of the live `demo-drift/ranker` Deployment, captured by
+`scripts/run-all.sh` and rendered by `scripts/render-timeline.sh`. Expand a step to see
+`retriever`'s resources and `metadata.managedFields` at that moment.
 
 <details open>
-<summary><b>Step 1 · Client-side <code>kubectl apply</code> creates the Deployment</b> — Argo CD: <code>n/a</code></summary>
+<summary><b>Step 1 · Argo CD creates the Deployment with server-side apply</b> — Argo CD: <code>Synced/Healthy</code> · live <code>limits.cpu</code>: <code>500m</code></summary>
 
-A human, CI job or migration tool creates the object with plain (client-side) `kubectl apply`.
-The API server records this as an **Update** by `kubectl-client-side-apply`, which owns all three containers.
-
-**Container spec** (`demo-compacted`)
-
-```yaml
-# live spec.template.spec.containers
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-  - name: feature-cache
-    image: registry.k8s.io/pause:3.10
-    env: [CACHE_MODE=legacy]
-```
-
-**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
-
-| manager | operation | time | containers it owns | other fields it owns |
-|---|---|---|---|---|
-| **kubectl-client-side-apply** | Update | 05:36:26 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kube-controller-manager | Update (`status`) | 05:36:27 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-
-<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
-
-```jsonc
-// manager: kubectl-client-side-apply  operation: Update
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    ".": {},
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:imagePullPolicy": {},
-  "f:name": {},
-  "f:resources": {
-    ".": {},
-    "f:requests": {
-      ".": {},
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  },
-  "f:terminationMessagePath": {},
-  "f:terminationMessagePolicy": {}
-}
-```
-
-</details>
-
-</details>
-
-<details>
-<summary><b>Step 2 · Day-2 kubectl verbs push Update managers to the cap (10)</b> — Argo CD: <code>n/a</code></summary>
-
-Routine operations each register their own **Update** manager: `kubectl (scale)`, `kubectl-annotate`, `kubectl-edit`, `kubectl-label`, `kubectl-patch`, `kubectl-replace`, `kubectl-rollout`, `kubectl-set`. None of them touches
-`feature-cache`. There are now 10 Update entries, and `kubectl-client-side-apply` is still the only owner of
-`feature-cache`. Note that `kubectl (scale)` has **no timestamp**. The API server sorts entries without a timestamp as the oldest.
-
-**Container spec** (`demo-compacted`)
-
-```yaml
-# live spec.template.spec.containers
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-  - name: feature-cache
-    image: registry.k8s.io/pause:3.10
-    env: [CACHE_MODE=legacy]
-```
-
-**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
-
-| manager | operation | time | containers it owns | other fields it owns |
-|---|---|---|---|---|
-| kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| **kubectl-client-side-apply** | Update | 05:36:26 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+11) |
-| kubectl-label | Update | 05:36:39 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:40 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:42 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:43 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:45 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 05:36:48 | — | `metadata.annotations.edited-by` |
-| kube-controller-manager | Update (`status`) | 05:36:49 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-| kubectl-replace | Update | 05:36:49 | — | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.annotations.replaced-at` |
-
-<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
-
-```jsonc
-// manager: kubectl-client-side-apply  operation: Update
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    ".": {},
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:imagePullPolicy": {},
-  "f:name": {},
-  "f:resources": {
-    ".": {},
-    "f:requests": {
-      ".": {},
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  },
-  "f:terminationMessagePath": {},
-  "f:terminationMessagePolicy": {}
-}
-```
-
-</details>
-
-</details>
-
-<details>
-<summary><b>Step 3 · Update manager #11 (<code>migration-orchestrator</code>) → API server compacts managedFields</b> — Argo CD: <code>n/a</code></summary>
-
-There are now more than `DefaultMaxUpdateManagers = 10` Update entries, so the API server ([`capmanagers.go`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/capmanagers.go)) sorts the
-Update entries by time and merges the oldest ones, `kubectl (scale)`, `kubectl-client-side-apply`, into **`ancient-changes`**. The fields survive, but the
-`kubectl-client-side-apply` entry no longer exists under that name. `feature-cache` is now owned by
-`ancient-changes`.
-
-**Container spec** (`demo-compacted`)
-
-```yaml
-# live spec.template.spec.containers
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-  - name: feature-cache
-    image: registry.k8s.io/pause:3.10
-    env: [CACHE_MODE=legacy]
-```
-
-**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
-
-| manager | operation | time | containers it owns | other fields it owns |
-|---|---|---|---|---|
-| **ancient-changes** | Update | 05:36:26 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 05:36:39 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:40 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:42 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:43 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:45 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 05:36:48 | — | `metadata.annotations.edited-by` |
-| kubectl-replace | Update | 05:36:49 | — | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.annotations.replaced-at` |
-| kube-controller-manager | Update (`status`) | 05:36:50 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-| migration-orchestrator | Update | 05:36:50 | — | `metadata.annotations.migration/state` |
-
-<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
-
-```jsonc
-// manager: ancient-changes  operation: Update
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    ".": {},
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:imagePullPolicy": {},
-  "f:name": {},
-  "f:resources": {
-    ".": {},
-    "f:requests": {
-      ".": {},
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  },
-  "f:terminationMessagePath": {},
-  "f:terminationMessagePolicy": {}
-}
-```
-
-</details>
-
-</details>
-
-<details>
-<summary><b>Step 4 · Argo CD adopts the object: first sync with <code>ServerSideApply=true</code> (Git = v1)</b> — Argo CD: <code>Synced/Healthy</code></summary>
-
-Before applying, Argo CD calls `needsClientSideApplyMigration` ([`gitops-engine/pkg/sync/sync_context.go:1341`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1341)).
-It looks for an entry with `manager == "kubectl-client-side-apply"` and `operation == Update`, finds none,
-and **skips the csaupgrade migration**. The server-side apply then makes `argocd-controller` (Apply) a
-*co-owner* of `feature-cache`, next to `ancient-changes`.
-
-**Container spec** (`demo-compacted`)
-
-```yaml
-# live spec.template.spec.containers
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-  - name: feature-cache
-    image: registry.k8s.io/pause:3.10
-    env: [CACHE_MODE=legacy]
-```
-
-**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
-
-| manager | operation | time | containers it owns | other fields it owns |
-|---|---|---|---|---|
-| **argocd-controller** | Apply | 05:36:57 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| **ancient-changes** | Update | 05:36:26 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 05:36:39 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:40 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:42 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:43 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:45 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 05:36:48 | — | `metadata.annotations.edited-by` |
-| migration-orchestrator | Update | 05:36:50 | — | `metadata.annotations.migration/state` |
-| kube-controller-manager | Update (`status`) | 05:36:57 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-
-<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
-
-```jsonc
-// manager: argocd-controller  operation: Apply
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:name": {},
-  "f:resources": {
-    "f:requests": {
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  }
-}
-
-
-// manager: ancient-changes  operation: Update
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    ".": {},
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:imagePullPolicy": {},
-  "f:name": {},
-  "f:resources": {
-    ".": {},
-    "f:requests": {
-      ".": {},
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  },
-  "f:terminationMessagePath": {},
-  "f:terminationMessagePolicy": {}
-}
-```
-
-</details>
-
-<details><summary>Same moment in <code>demo-control</code> (Argo CD: <code>Synced/Healthy</code>)</summary>
-
-Here the `kubectl-client-side-apply` entry still exists, so `performCSAUpgradeMigration` moves its fields to
-`argocd-controller` and deletes the entry. `argocd-controller` is now the **sole** owner of `feature-cache`.
-
-```yaml
-# live spec.template.spec.containers
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-  - name: feature-cache
-    image: registry.k8s.io/pause:3.10
-    env: [CACHE_MODE=legacy]
-```
-
-| manager | operation | time | containers it owns | other fields it owns |
-|---|---|---|---|---|
-| **argocd-controller** | Apply | 05:36:51 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| kubectl-label | Update | 05:36:30 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:31 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:33 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:34 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:35 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kube-controller-manager | Update (`status`) | 05:36:51 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-
-</details>
-
-</details>
-
-<details>
-<summary><b>Step 5 · <code>feature-cache</code> deleted in Git (v2), before sync</b> — Argo CD: <code>Synced/Healthy</code></summary>
-
-Server-side diff ([`gitops-engine/pkg/diff/diff.go:172`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L172)) runs a dry-run SSA of v2. Because `ancient-changes`
-still owns the container, the dry run predicts that the container **stays**. The predicted state equals live, so
-Argo CD says **Synced**: the change in Git is invisible.
-
-**Container spec** (`demo-compacted`)
+Argo CD syncs `manifests/v1` with `ServerSideApply=true`. `argocd-controller` (operation `Apply`) owns every
+field in the manifest, including `retriever`'s `limits.cpu: 500m`.
 
 ```diff
-# live spec.template.spec.containers vs. Git (manifests/v2). '+' = in the cluster but NOT in Git
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-+ - name: feature-cache
-+   image: registry.k8s.io/pause:3.10
-+   env: [CACHE_MODE=legacy]
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v1)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
+      cpu: 500m
+      memory: 64Mi
 ```
 
-**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
+**managedFields** (`demo-drift`)
 
-| manager | operation | time | containers it owns | other fields it owns |
+| manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 05:36:57 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| **ancient-changes** | Update | 05:36:26 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 05:36:39 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:40 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:42 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:43 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:45 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 05:36:48 | — | `metadata.annotations.edited-by` |
-| migration-orchestrator | Update | 05:36:50 | — | `metadata.annotations.migration/state` |
-| kube-controller-manager | Update (`status`) | 05:36:57 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-
-<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
-
-```jsonc
-// manager: argocd-controller  operation: Apply
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:name": {},
-  "f:resources": {
-    "f:requests": {
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  }
-}
-
-
-// manager: ancient-changes  operation: Update
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    ".": {},
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:imagePullPolicy": {},
-  "f:name": {},
-  "f:resources": {
-    ".": {},
-    "f:requests": {
-      ".": {},
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  },
-  "f:terminationMessagePath": {},
-  "f:terminationMessagePolicy": {}
-}
-```
+| **argocd-controller** | Apply | 06:12:35 | **yes** | 17 |
+| kube-controller-manager | Update (`status`) | 06:12:35 | — | 19 |
 
 </details>
 
-<details><summary>Same moment in <code>demo-control</code> (Argo CD: <code>OutOfSync/Healthy</code>)</summary>
+<details>
+<summary><b>Step 2 · Incident: on-call raises the CPU limit with kubectl</b> — Argo CD: <code>OutOfSync/Progressing</code> · live <code>limits.cpu</code>: <code>2</code></summary>
 
-Here the dry run predicts that the container is removed, so the app correctly goes **OutOfSync**.
+`kubectl set resources deploy/ranker -c retriever --limits=cpu=2`. kubectl sends an **Update** that changes the value, and the API server moves ownership of that
+field to `kubectl-set`. `argocd-controller` no longer owns it. Argo CD correctly reports **OutOfSync**, because Git
+still says `500m`.
 
 ```diff
-# live spec.template.spec.containers vs. Git (manifests/v2). '+' = in the cluster but NOT in Git
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-+ - name: feature-cache
-+   image: registry.k8s.io/pause:3.10
-+   env: [CACHE_MODE=legacy]
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v1)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
+      cpu: 2
+      memory: 64Mi
 ```
 
-| manager | operation | time | containers it owns | other fields it owns |
+**managedFields** (`demo-drift`)
+
+| manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 05:36:51 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| kubectl-label | Update | 05:36:30 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:31 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:33 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:34 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:35 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kube-controller-manager | Update (`status`) | 05:36:51 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| argocd-controller | Apply | 06:12:35 | — | 16 |
+| kube-controller-manager | Update (`status`) | 06:12:51 | — | 20 |
+| **kubectl-set** | Update | 06:12:51 | **yes** | 1 |
+
+</details>
+
+<details>
+<summary><b>Step 3 · Git deletes the CPU limit, and Argo CD flips to Synced *without syncing*</b> — Argo CD: <code>Synced/Healthy</code> · live <code>limits.cpu</code>: <code>2</code></summary>
+
+The team deletes `retriever`'s CPU limit from Git (`manifests/v2`). Argo CD's server-side diff
+([`diff.go:177`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L177)) runs a dry-run server-side apply of v2. That dry run
+keeps every field `argocd-controller` doesn't own, so it predicts `limits.cpu: 2` stays. The prediction equals live,
+and [`diff.go:286-290`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L286-L290) explicitly drops removals of fields
+Argo CD doesn't own. The app goes from **OutOfSync to Synced**, although nothing in the cluster changed and the
+live value still differs from Git.
+
+```diff
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v2)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
++     cpu: 2
+      memory: 64Mi
+```
+
+**managedFields** (`demo-drift`)
+
+| manager | operation | time | owns `limits.cpu` | fields owned |
+|---|---|---|---|---|
+| argocd-controller | Apply | 06:12:35 | — | 16 |
+| kube-controller-manager | Update (`status`) | 06:12:51 | — | 19 |
+| **kubectl-set** | Update | 06:12:51 | **yes** | 1 |
+
+<details><summary>Same moment in <code>demo-resync</code> (Argo CD: <code>OutOfSync/Healthy</code>, live <code>limits.cpu</code>: <code>500m</code>)</summary>
+
+In `demo-resync`, Argo CD re-synced v1 *before* this commit. With `force-conflicts` it took `limits.cpu` back
+(value `500m`, owner `argocd-controller`). The dry run therefore predicts the field is removed, and the app correctly
+shows **OutOfSync**.
+
+```diff
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v2)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
++     cpu: 500m
+      memory: 64Mi
+```
+
+| manager | operation | time | owns `limits.cpu` | fields owned |
+|---|---|---|---|---|
+| **argocd-controller** | Apply | 06:12:54 | **yes** | 17 |
+| kube-controller-manager | Update (`status`) | 06:12:55 | — | 19 |
 
 </details>
 
 </details>
 
 <details>
-<summary><b>Step 6 · Argo CD syncs v2 with <code>ServerSideApply=true</code></b> — Argo CD: <code>Synced/Healthy</code></summary>
+<summary><b>Step 4 · Argo CD syncs v2: the sync succeeds, and the CPU limit stays</b> — Argo CD: <code>Synced/Healthy</code> · live <code>limits.cpu</code>: <code>2</code></summary>
 
-The sync drops `argocd-controller`'s claim on `feature-cache`. Server-side apply only deletes a field when
-no other manager owns it. `ancient-changes` still does, so the API server **keeps the container**. The
-sync *Succeeds*, the app reports **Synced/Healthy**, and a container that is no longer in Git keeps running.
-
-**Container spec** (`demo-compacted`)
-
-```diff
-# live spec.template.spec.containers vs. Git (manifests/v2). '+' = in the cluster but NOT in Git
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
-+ - name: feature-cache
-+   image: registry.k8s.io/pause:3.10
-+   env: [CACHE_MODE=legacy]
-```
-
-**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
-
-| manager | operation | time | containers it owns | other fields it owns |
-|---|---|---|---|---|
-| argocd-controller | Apply | 05:36:57 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| **ancient-changes** | Update | 05:36:26 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 05:36:39 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:40 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:42 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:43 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:45 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 05:36:48 | — | `metadata.annotations.edited-by` |
-| migration-orchestrator | Update | 05:36:50 | — | `metadata.annotations.migration/state` |
-| kube-controller-manager | Update (`status`) | 05:36:57 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-
-<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
-
-```jsonc
-// manager: ancient-changes  operation: Update
-// f:spec.f:template.f:spec.f:containers.k:{"name":"feature-cache"}
-{
-  ".": {},
-  "f:env": {
-    ".": {},
-    "k:{\"name\":\"CACHE_MODE\"}": {
-      ".": {},
-      "f:name": {},
-      "f:value": {}
-    }
-  },
-  "f:image": {},
-  "f:imagePullPolicy": {},
-  "f:name": {},
-  "f:resources": {
-    ".": {},
-    "f:requests": {
-      ".": {},
-      "f:cpu": {},
-      "f:memory": {}
-    }
-  },
-  "f:terminationMessagePath": {},
-  "f:terminationMessagePolicy": {}
-}
-```
-
-</details>
-
-<details><summary>Same moment in <code>demo-control</code> (Argo CD: <code>Synced/Healthy</code>)</summary>
-
-`argocd-controller` was the sole owner, so server-side apply deletes the container, as Git says.
+Argo CD applies v2 as a server-side-apply PATCH
+([`sync_context.go:1485`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1485)). The API server deletes a field
+only when the applier owns it, and `kubectl-set` owns `limits.cpu`. The sync **Succeeds**, the app is
+**Synced/Healthy**, and `retriever` keeps running with a 2-core CPU limit that exists nowhere in Git.
 
 ```diff
-# live spec.template.spec.containers vs. Git (manifests/v2). '+' = in the cluster but NOT in Git
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-    env: [LOG_LEVEL=debug]
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v2)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
++     cpu: 2
+      memory: 64Mi
 ```
 
-| manager | operation | time | containers it owns | other fields it owns |
+**managedFields** (`demo-drift`)
+
+| manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 05:37:05 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| kubectl-label | Update | 05:36:30 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 05:36:31 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 05:36:33 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 05:36:34 | `retriever` | — |
-| kubectl-rollout | Update | 05:36:35 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kube-controller-manager | Update (`status`) | 05:37:06 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| argocd-controller | Apply | 06:12:35 | — | 16 |
+| kube-controller-manager | Update (`status`) | 06:12:51 | — | 19 |
+| **kubectl-set** | Update | 06:12:51 | **yes** | 1 |
+
+<details><summary>Same moment in <code>demo-resync</code> (Argo CD: <code>Synced/Healthy</code>, live <code>limits.cpu</code>: <code>none</code>)</summary>
+
+`argocd-controller` owned the field again, so the sync deletes it, as Git says.
+
+```diff
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v2)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
+      memory: 64Mi
+```
+
+| manager | operation | time | owns `limits.cpu` | fields owned |
+|---|---|---|---|---|
+| argocd-controller | Apply | 06:13:21 | — | 16 |
+| kube-controller-manager | Update (`status`) | 06:13:22 | — | 19 |
 
 </details>
 
 </details>
 
 <details>
-<summary><b>Step 7 · Contrast: the same sync as a PUT (<code>Replace=true</code>)</b> — Argo CD: <code>Synced/Healthy</code></summary>
+<summary><b>Step 5 · The same outcome after managedFields compaction: the owner is now anonymous</b> — Argo CD: <code>Synced/Healthy</code> · live <code>limits.cpu</code>: <code>2</code></summary>
 
-Argo CD's existing `Replace=true` sync option writes the object with a PUT instead of an SSA PATCH. A PUT replaces
-the whole object with the desired state and never consults `managedFields`, so the zombie container is gone. Argo CD
-sends the Git manifest exactly as written, though, so fields set by other managers are wiped too. Compare the
-`replicas`, labels and the `retriever` env var with step 6. See [the proposed fix](#proposed-fix-authoritative-put-instead-of-patch)
-for how a PUT-based sync keeps them.
-
-**Container spec** (`demo-compacted`)
+In `demo-compacted`, routine day-2 operations (labels, annotations, `rollout restart`, `scale`, `edit`, `replace`,
+controllers) pushed the object past 10 `Update` managers before Git changed. The API server merged the oldest
+entries, including `kubectl-set`, into **`ancient-changes`**. The result is the same silent drift, but nothing in
+the object says who set the value or when.
 
 ```diff
-# live spec.template.spec.containers vs. Git (manifests/v2). '+' = in the cluster but NOT in Git
-  - name: retriever
-    image: registry.k8s.io/pause:3.10
-  - name: ranker
-    image: registry.k8s.io/pause:3.10
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v2)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
++     cpu: 2
+      memory: 64Mi
 ```
 
-**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
+**managedFields** (`demo-compacted`)
 
-| manager | operation | time | containers it owns | other fields it owns |
+| manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 05:36:57 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| ancient-changes | Update | 05:36:26 | `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+11) |
-| argocd-application-controller | Update | 05:37:20 | — | `spec.replicas` |
-| kube-controller-manager | Update (`status`) | 05:37:21 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-
-<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
-
-```jsonc
-// no managedFields entry claims feature-cache any more
-```
+| argocd-controller | Apply | 06:12:46 | — | 16 |
+| **ancient-changes** | Update | 06:12:58 | **yes** | 2 |
+| kubectl-annotate | Update | 06:12:59 | — | 1 |
+| kubectl-patch | Update | 06:13:00 | — | 1 |
+| kubectl-rollout | Update | 06:13:02 | — | 1 |
+| kubectl-edit | Update | 06:13:05 | — | 1 |
+| kubectl-replace | Update | 06:13:06 | — | 1 |
+| hpa-controller | Update | 06:13:07 | — | 1 |
+| kube-controller-manager | Update (`status`) | 06:13:09 | — | 19 |
+| migration-orchestrator | Update | 06:13:09 | — | 1 |
+| cost-attribution-bot | Update | 06:13:10 | — | 1 |
 
 </details>
+
+<details>
+<summary><b>Step 6 · Contrast: the same sync as a PUT (<code>Replace=true</code>)</b> — Argo CD: <code>Synced/Healthy</code> · live <code>limits.cpu</code>: <code>none</code></summary>
+
+Argo CD's existing `Replace=true` sync option writes the object with a PUT. A PUT replaces the whole object and never
+consults `managedFields`, so the drifted CPU limit is gone. Argo CD sends the manifest exactly as written, though, so
+it also wipes fields other managers set: `replicas` and the labels added during day-2 operations. See
+[the proposed fix](#proposed-fix-authoritative-put-instead-of-patch) for how a PUT-based sync keeps them.
+
+```diff
+# live: containers[name=retriever].resources   ('+' = in the cluster but NOT in Git v2)
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits:
+      memory: 64Mi
+```
+
+**managedFields** (`demo-compacted`)
+
+| manager | operation | time | owns `limits.cpu` | fields owned |
+|---|---|---|---|---|
+| argocd-controller | Apply | 06:12:46 | — | 16 |
+| argocd-application-controller | Update | 06:13:32 | — | 1 |
+| kube-controller-manager | Update (`status`) | 06:13:33 | — | 19 |
 
 </details>
 
@@ -722,53 +355,49 @@ for how a PUT-based sync keeps them.
 | `scripts/00-prereqs.sh` | Check that the CLIs and the Docker daemon are available |
 | `scripts/01-cluster-up.sh` | Create the kind cluster `argocd-ssa-repro` with `.work/git` mounted at `/repro-git` |
 | `scripts/02-install-argocd.sh` | Install Argo CD `$ARGOCD_VERSION` (default `v3.6.1`) and mount `/repro-git` into `argocd-repo-server` |
-| `scripts/03-seed-git.sh` | Create the bare repo and commit `manifests/v1` (containers `retriever`, `ranker`, `feature-cache`) |
-| `scripts/04-bootstrap-and-inflate.sh` | In two namespaces, create the Deployment with **client-side** `kubectl apply`, then run day-2 kubectl verbs (see below) |
-| `scripts/05-create-apps.sh` | Create the `AppProject` and one `Application` per namespace (`ServerSideApply=true`), then sync v1 |
-| `scripts/06-remove-container.sh` | Commit `manifests/v2` (`feature-cache` removed) and sync both apps |
-| `scripts/07-replace-sync.sh` | Contrast: re-sync the compacted app with `Replace=true` (PUT). The zombie is removed, but fields set by other managers are wiped |
-| `scripts/verify.sh` | Print the verdict. Exits 0 if the bug reproduced. With `EXPECT_FIXED=1`, exits 0 only if both namespaces are clean, for testing a patch |
-| `scripts/render-timeline.sh` | Regenerate the [timeline](#timeline-how-the-container-survives-its-deletion) above and `docs/snapshots.js` (data for the interactive page) from the snapshots in `.work/snapshots/` |
-| `scripts/run-all.sh` | All of the above, plus the timeline. Re-runnable: it reuses the cluster and recreates the demo state |
+| `scripts/03-seed-git.sh` | Create the bare repo and commit `manifests/v1` |
+| `scripts/04-create-apps.sh` | Create the `AppProject` and one `Application` per namespace (`ServerSideApply=true`). Argo CD creates the Deployments by syncing v1 |
+| `scripts/05-incident.sh` | Run `kubectl set resources … --limits=cpu=2` in every namespace. Then `demo-resync` re-syncs v1, and `demo-compacted` gets routine day-2 kubectl operations until the API server compacts `managedFields` |
+| `scripts/06-git-drop-field.sh` | Commit `manifests/v2` (CPU limit deleted) and record what Argo CD reports before any sync |
+| `scripts/07-sync.sh` | Sync v2 in every namespace |
+| `scripts/verify.sh` | Print the verdict. Exits 0 if the bug reproduced. With `EXPECT_FIXED=1`, exits 0 only if every namespace is clean, for testing a patch |
+| `scripts/08-replace-sync.sh` | Contrast: re-sync `demo-compacted` with `Replace=true` (PUT). The drifted field is removed, but fields set by other managers are wiped too |
+| `scripts/render-timeline.sh` | Regenerate the [timeline](#timeline-how-the-field-survives-its-deletion) and `docs/snapshots.js` (data for the interactive page) from `.work/snapshots/` |
+| `scripts/run-all.sh` | All of the above. Re-runnable: it reuses the cluster and recreates the demo state |
 | `scripts/cluster-down.sh` | Delete the cluster and `.work/` |
-
-The two namespaces get the same treatment except for **how many** managers are added:
-
-| Namespace | Update managers added | `kubectl-client-side-apply` entry at first SSA sync | Outcome |
-|---|---|---|---|
-| `demo-control` | stays at ≤ 8 | present → Argo CD migrates it | `feature-cache` removed ✔ |
-| `demo-compacted` | added until compaction happens (the 11th Update manager) | merged into `ancient-changes` → migration skipped | `feature-cache` remains, app `Synced` ✘ |
-
-None of the kubectl verbs touches the `feature-cache` container. The only thing that keeps it
-alive is the ownership it inherited from `kubectl-client-side-apply`.
-
-Sample output of the inflation step:
-
-```
-==> demo-compacted: adding field managers until the API server compacts managedFields
-    kubectl-label            -> Update managers:  3   kubectl-client-side-apply entry present: yes
-    ...
-    kubectl-replace          -> Update managers: 10   kubectl-client-side-apply entry present: yes
-    migration-orchestrator   -> Update managers: 10   kubectl-client-side-apply entry present: NO
-
-    owners of container 'feature-cache' in demo-control:   kubectl-client-side-apply (Update)
-    owners of container 'feature-cache' in demo-compacted: ancient-changes (Update)
-```
 
 ## Poking at it manually
 
 ```bash
-kubectl --context kind-argocd-ssa-repro -n demo-compacted get deploy ranker -o yaml --show-managed-fields
-kubectl --context kind-argocd-ssa-repro -n argocd get app ranker-demo-compacted -o yaml
+kubectl --context kind-argocd-ssa-repro -n demo-drift get deploy ranker -o yaml --show-managed-fields
+kubectl --context kind-argocd-ssa-repro -n argocd get app ranker-demo-drift -o yaml
 ```
+
+## Related paths to the same silent drift
+
+While building this repo we also confirmed two narrower paths. Neither is scripted here any more;
+commit [`93bd972`](https://github.com/rameshgi/argocd-ssa-managedfields-repro/tree/93bd972) has a
+scripted version of the second.
+
+* **A container someone else (re)created.** A container's name is its list key, so whoever creates
+  the list item owns it. Argo CD removes a container it created even if kubectl changed every other
+  field in it. If an on-call engineer *removes and re-adds* a container, the new item belongs to
+  kubectl. Deleting it from Git then leaves the whole container running, and Argo CD shows `Synced`.
+* **Objects first created by client-side `kubectl apply`.** Argo CD migrates the
+  `kubectl-client-side-apply` entry to itself on its first server-side-apply sync
+  ([`sync_context.go:1341`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1341-L1354)).
+  If compaction has already renamed that entry to `ancient-changes`, the migration is skipped, and
+  containers later deleted from Git survive.
+
+All of these paths have the same root: with a PATCH, what gets deleted depends on the object's
+ownership history, not on Git.
 
 ## Proposed fix: authoritative PUT instead of PATCH
 
-The root problem is that a server-side-apply PATCH only removes a field when the applier is its
-*sole* owner. Whether a field Git no longer contains gets deleted therefore depends on
-`managedFields` bookkeeping, and the API server does not preserve that bookkeeping faithfully
-(compaction, migrations, manual `kubectl` edits). As long as the sync is a PATCH, some path to a
-zombie field remains.
+A server-side-apply PATCH only removes a field when the applier owns it. Whether a field Git no
+longer contains is deleted therefore depends on `managedFields` bookkeeping. Any imperative change
+silently rewrites that bookkeeping, and compaction erases its history. As long as the sync is a
+PATCH, Argo CD can neither guarantee nor even detect that the object matches Git.
 
 The engine described in the [blog post](https://www.linkedin.com/blog/engineering/infrastructure/how-we-scale-deployments-with-a-custom-gitops-engine)
 takes a different approach: **no PATCH, only PUT**. Each deployment is authoritative for the parts
@@ -781,29 +410,31 @@ a sync would:
    other controllers, fields injected by webhooks. These are declared up front, and their *live*
    values are copied into the desired object. Everything else comes from Git.
 3. **PUT the result**, guarded by the live object's `resourceVersion`. Fields that are not in the
-   desired object, such as a container deleted from Git, are gone after the write, whoever
+   desired object, such as a CPU limit deleted from Git, are gone after the write, whoever
    `managedFields` says owns them.
 4. **On `409 Conflict`, re-read the live object, recompute step 2 and retry** with exponential
    backoff. A concurrent writer is never silently overwritten, and the deployment never acts on a
    stale view.
 
 With this design the outcome no longer depends on `managedFields`: the object equals Git plus the
-explicitly declared external fields. That is the declarative contract users expect from GitOps.
+explicitly declared external fields. The diff becomes honest too, because desired state is no longer
+"whatever a server-side apply would leave behind". That is the declarative contract users expect
+from GitOps.
 
-**Evidence from this repo** (step 7 of the [timeline](#timeline-how-the-container-survives-its-deletion),
-`scripts/07-replace-sync.sh`): Argo CD already has a PUT path, the `Replace=true` sync option
-(`kubectl replace`). Re-syncing the compacted object with it removes the zombie container right away:
+**Evidence from this repo** (step 6 of the [timeline](#timeline-how-the-field-survives-its-deletion),
+`scripts/08-replace-sync.sh`): Argo CD already has a PUT path, the `Replace=true` sync option
+(`kubectl replace`). Re-syncing `demo-compacted` with it removes the drifted CPU limit right away:
 
 ```
-before: containers=retriever,ranker,feature-cache  replicas=2  labels=app,team  retriever.env=LOG_LEVEL
-after:  containers=retriever,ranker  replicas=1  labels=app  retriever.env=
+before: limits.cpu=2  replicas=2  labels=app,cost-center,team
+after:  limits.cpu=<absent>  replicas=1  labels=app
 ```
 
 It also shows why step 2 is essential. `Replace=true` PUTs the Git manifest exactly as written, so
-it also wipes everything other managers set: `replicas` (2 → 1), the `team` label and the
-`LOG_LEVEL` env var. The missing piece in Argo CD is therefore not the PUT itself, but
-reconciling the declared external fields before the PUT, plus the conflict-retry loop. Together
-they make a PUT safe to use as the default way to sync.
+it also wipes everything other managers set: `replicas` (2 → 1) and the labels added during day-2
+operations. The missing piece in Argo CD is therefore not the PUT itself, but reconciling the
+declared external fields before the PUT, plus the conflict-retry loop. Together they make a PUT
+safe to use as the default way to sync.
 
 ## License
 
