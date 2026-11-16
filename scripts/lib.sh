@@ -46,7 +46,10 @@ snapshot() { # label ns [note]
   local argo
   mkdir -p "${SNAP_DIR}"
   argo="$(k -n argocd get app "ranker-$2" -o jsonpath='{.status.sync.status}/{.status.health.status}' 2>/dev/null || true)"
-  deploy_json "$2" | jq --arg argo "${argo}" --arg note "${3:-}" '. + {_argo: $argo, _note: $note}' \
+  local k8s
+  k8s="$(k version -o json 2>/dev/null | jq -r '.serverVersion.gitVersion // empty' || true)"
+  deploy_json "$2" | jq --arg argo "${argo}" --arg note "${3:-}" --arg k8s "${k8s}" \
+    '. + {_argo: $argo, _note: $note, _k8s: $k8s}' \
     > "${SNAP_DIR}/$1.$2.json"
 }
 
@@ -104,10 +107,11 @@ app_refresh() { # app sha
 
 # Trigger a sync through the Application's .operation field (no argocd CLI
 # needed) and wait for it to finish.
-app_sync() { # app sha
+app_sync() { # app sha [extra sync option ...]
   local app="$1" sha="$2" i phase
-  k -n argocd patch app "${app}" --type merge -p "$(jq -nc --arg r "${sha}" \
-    '{operation:{initiatedBy:{username:"repro-script"},sync:{revision:$r,syncOptions:["ServerSideApply=true"]}}}')" >/dev/null
+  shift 2
+  k -n argocd patch app "${app}" --type merge -p "$(jq -nc --arg r "${sha}" --args \
+    '{operation:{initiatedBy:{username:"repro-script"},sync:{revision:$r,syncOptions:(["ServerSideApply=true"] + $ARGS.positional)}}}' "$@")" >/dev/null
   for i in $(seq 1 90); do
     phase="$(k -n argocd get app "${app}" -o jsonpath='{.status.operationState.phase}')"
     if [[ -z "$(k -n argocd get app "${app}" -o jsonpath='{.operation}')" &&

@@ -19,5 +19,6 @@ rm -rf "${SNAP_DIR}"
 "${D}/05-create-apps.sh"
 "${D}/06-remove-container.sh"
 "${D}/verify.sh" || rc=$?
+"${D}/07-replace-sync.sh"
 "${D}/render-timeline.sh"
 exit "${rc:-0}"

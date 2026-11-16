@@ -22,6 +22,12 @@ and as a result Argo CD silently skips its client-side-apply → server-side-app
 paths to the same symptom may exist. Any `Update` manager that co-owns a field Argo CD stops
 applying keeps that field alive, with or without compaction.
 
+**Interactive walkthrough:** [`docs/index.html`](docs/index.html) steps through the mechanism
+using the same captured data: an ownership matrix, the live spec compared with Git, and the
+Kubernetes and Argo CD code that is evaluated at each step. Once GitHub Pages is enabled for `/docs`,
+it is at <https://rameshgi.github.io/argocd-ssa-managedfields-repro/>. Locally, open
+`docs/index.html` in a browser.
+
 **Result:** a container removed from Git keeps running in the cluster, and Argo CD reports
 the Application as `Synced/Healthy`. Argo CD's diff never shows it as drift.
 
@@ -144,8 +150,8 @@ The API server records this as an **Update** by `kubectl-client-side-apply`, whi
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| kube-controller-manager | Update (`status`) | 04:53:40 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-| **kubectl-client-side-apply** | Update | 04:53:40 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
+| **kubectl-client-side-apply** | Update | 05:23:58 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
+| kube-controller-manager | Update (`status`) | 05:23:59 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
 
 <details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
 
@@ -208,15 +214,15 @@ Routine operations each register their own **Update** manager: `kubectl (scale)`
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
 | kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| **kubectl-client-side-apply** | Update | 04:53:40 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+11) |
-| kubectl-label | Update | 04:53:51 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:53 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:54 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:55 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:57 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 04:53:59 | — | `metadata.annotations.edited-by` |
-| kube-controller-manager | Update (`status`) | 04:54:01 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-| kubectl-replace | Update | 04:54:01 | — | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.annotations.replaced-at` |
+| **kubectl-client-side-apply** | Update | 05:23:58 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+11) |
+| kubectl-label | Update | 05:24:10 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:12 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:13 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:14 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:16 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kubectl-edit | Update | 05:24:19 | — | `metadata.annotations.edited-by` |
+| kube-controller-manager | Update (`status`) | 05:24:20 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| kubectl-replace | Update | 05:24:20 | — | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.annotations.replaced-at` |
 
 <details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
 
@@ -279,16 +285,16 @@ Update entries by time and merges the oldest ones, `kubectl (scale)`, `kubectl-c
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| **ancient-changes** | Update | 04:53:40 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 04:53:51 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:53 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:54 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:55 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:57 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 04:53:59 | — | `metadata.annotations.edited-by` |
-| kubectl-replace | Update | 04:54:01 | — | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.annotations.replaced-at` |
-| kube-controller-manager | Update (`status`) | 04:54:02 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
-| migration-orchestrator | Update | 04:54:02 | — | `metadata.annotations.migration/state` |
+| **ancient-changes** | Update | 05:23:58 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
+| kubectl-label | Update | 05:24:10 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:12 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:13 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:14 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:16 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kubectl-edit | Update | 05:24:19 | — | `metadata.annotations.edited-by` |
+| kubectl-replace | Update | 05:24:20 | — | `metadata.annotations.kubectl.kubernetes.io/last-applied-configuration`, `metadata.annotations.replaced-at` |
+| kube-controller-manager | Update (`status`) | 05:24:21 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| migration-orchestrator | Update | 05:24:21 | — | `metadata.annotations.migration/state` |
 
 <details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
 
@@ -351,16 +357,16 @@ and **skips the csaupgrade migration**. The server-side apply then makes `argocd
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 04:54:08 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| **ancient-changes** | Update | 04:53:40 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 04:53:51 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:53 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:54 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:55 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:57 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 04:53:59 | — | `metadata.annotations.edited-by` |
-| migration-orchestrator | Update | 04:54:02 | — | `metadata.annotations.migration/state` |
-| kube-controller-manager | Update (`status`) | 04:54:08 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| **argocd-controller** | Apply | 05:24:28 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
+| **ancient-changes** | Update | 05:23:58 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
+| kubectl-label | Update | 05:24:10 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:12 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:13 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:14 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:16 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kubectl-edit | Update | 05:24:19 | — | `metadata.annotations.edited-by` |
+| migration-orchestrator | Update | 05:24:21 | — | `metadata.annotations.migration/state` |
+| kube-controller-manager | Update (`status`) | 05:24:28 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
 
 <details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
 
@@ -436,14 +442,14 @@ Here the `kubectl-client-side-apply` entry still exists, so `performCSAUpgradeMi
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 04:54:03 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
+| **argocd-controller** | Apply | 05:24:22 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
 | kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| kubectl-label | Update | 04:53:43 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:45 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:46 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:47 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:49 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kube-controller-manager | Update (`status`) | 04:54:03 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| kubectl-label | Update | 05:24:02 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:04 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:05 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:06 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:07 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kube-controller-manager | Update (`status`) | 05:24:22 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
 
 </details>
 
@@ -474,16 +480,16 @@ Argo CD says **Synced**: the change in Git is invisible.
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 04:54:08 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| **ancient-changes** | Update | 04:53:40 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 04:53:51 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:53 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:54 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:55 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:57 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 04:53:59 | — | `metadata.annotations.edited-by` |
-| migration-orchestrator | Update | 04:54:02 | — | `metadata.annotations.migration/state` |
-| kube-controller-manager | Update (`status`) | 04:54:08 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| **argocd-controller** | Apply | 05:24:28 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
+| **ancient-changes** | Update | 05:23:58 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
+| kubectl-label | Update | 05:24:10 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:12 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:13 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:14 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:16 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kubectl-edit | Update | 05:24:19 | — | `metadata.annotations.edited-by` |
+| migration-orchestrator | Update | 05:24:21 | — | `metadata.annotations.migration/state` |
+| kube-controller-manager | Update (`status`) | 05:24:28 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
 
 <details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
 
@@ -558,14 +564,14 @@ Here the dry run predicts that the container is removed, so the app correctly go
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 04:54:03 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
+| **argocd-controller** | Apply | 05:24:22 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
 | kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| kubectl-label | Update | 04:53:43 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:45 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:46 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:47 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:49 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kube-controller-manager | Update (`status`) | 04:54:03 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| kubectl-label | Update | 05:24:02 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:04 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:05 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:06 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:07 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kube-controller-manager | Update (`status`) | 05:24:22 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
 
 </details>
 
@@ -596,16 +602,16 @@ sync *Succeeds*, the app reports **Synced/Healthy**, and a container that is no 
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| argocd-controller | Apply | 04:54:08 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
-| **ancient-changes** | Update | 04:53:40 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
-| kubectl-label | Update | 04:53:51 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:53 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:54 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:55 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:57 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kubectl-edit | Update | 04:53:59 | — | `metadata.annotations.edited-by` |
-| migration-orchestrator | Update | 04:54:02 | — | `metadata.annotations.migration/state` |
-| kube-controller-manager | Update (`status`) | 04:54:08 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| argocd-controller | Apply | 05:24:28 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
+| **ancient-changes** | Update | 05:23:58 | **`feature-cache`** 🧟, `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+12) |
+| kubectl-label | Update | 05:24:10 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:12 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:13 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:14 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:16 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kubectl-edit | Update | 05:24:19 | — | `metadata.annotations.edited-by` |
+| migration-orchestrator | Update | 05:24:21 | — | `metadata.annotations.migration/state` |
+| kube-controller-manager | Update (`status`) | 05:24:28 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
 
 <details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
 
@@ -655,14 +661,52 @@ sync *Succeeds*, the app reports **Synced/Healthy**, and a container that is no 
 
 | manager | operation | time | containers it owns | other fields it owns |
 |---|---|---|---|---|
-| argocd-controller | Apply | 04:54:16 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
+| argocd-controller | Apply | 05:24:36 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
 | kubectl | Update (`scale`) |  | — | `spec.replicas` |
-| kubectl-label | Update | 04:53:43 | — | `metadata.labels.team` |
-| kubectl-annotate | Update | 04:53:45 | — | `metadata.annotations.owner` |
-| kubectl-patch | Update | 04:53:46 | — | `metadata.annotations.ticket` |
-| kubectl-set | Update | 04:53:47 | `retriever` | — |
-| kubectl-rollout | Update | 04:53:49 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
-| kube-controller-manager | Update (`status`) | 04:54:17 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+| kubectl-label | Update | 05:24:02 | — | `metadata.labels.team` |
+| kubectl-annotate | Update | 05:24:04 | — | `metadata.annotations.owner` |
+| kubectl-patch | Update | 05:24:05 | — | `metadata.annotations.ticket` |
+| kubectl-set | Update | 05:24:06 | `retriever` | — |
+| kubectl-rollout | Update | 05:24:07 | — | `spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt` |
+| kube-controller-manager | Update (`status`) | 05:24:37 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+
+</details>
+
+</details>
+
+<details>
+<summary><b>Step 7 · Contrast: the same sync as a PUT (<code>Replace=true</code>)</b> — Argo CD: <code>Synced/Healthy</code></summary>
+
+Argo CD's existing `Replace=true` sync option writes the object with a PUT instead of an SSA PATCH. A PUT replaces
+the whole object with the desired state and never consults `managedFields`, so the zombie container is gone. Argo CD
+sends the Git manifest exactly as written, though, so fields set by other managers are wiped too. Compare the
+`replicas`, labels and the `retriever` env var with step 6. See [the proposed fix](#proposed-fix-authoritative-put-instead-of-patch)
+for how a PUT-based sync keeps them.
+
+**Container spec** (`demo-compacted`)
+
+```diff
+# live spec.template.spec.containers vs. Git (manifests/v2). '+' = in the cluster but NOT in Git
+  - name: retriever
+    image: registry.k8s.io/pause:3.10
+  - name: ranker
+    image: registry.k8s.io/pause:3.10
+```
+
+**managedFields** (`demo-compacted`). Bold = claims `feature-cache`
+
+| manager | operation | time | containers it owns | other fields it owns |
+|---|---|---|---|---|
+| argocd-controller | Apply | 05:24:28 | `ranker`, `retriever` | `metadata.annotations.argocd.argoproj.io/tracking-id`, `metadata.labels.app`, `spec.selector` … (+2) |
+| ancient-changes | Update | 05:23:58 | `ranker`, `retriever` | `metadata.annotations`, `metadata.labels.app`, `spec.progressDeadlineSeconds` … (+11) |
+| argocd-application-controller | Update | 05:24:52 | — | `spec.replicas` |
+| kube-controller-manager | Update (`status`) | 05:24:52 | — | `metadata.annotations.deployment.kubernetes.io/revision`, `status.availableReplicas`, `status.conditions.{"type":"Available"}.lastTransitionTime` … (+16) |
+
+<details><summary><code>fieldsV1</code> claims on <code>feature-cache</code></summary>
+
+```jsonc
+// no managedFields entry claims feature-cache any more
+```
 
 </details>
 
@@ -681,8 +725,9 @@ sync *Succeeds*, the app reports **Synced/Healthy**, and a container that is no 
 | `scripts/04-bootstrap-and-inflate.sh` | In two namespaces, create the Deployment with **client-side** `kubectl apply`, then run day-2 kubectl verbs (see below) |
 | `scripts/05-create-apps.sh` | Create the `AppProject` and one `Application` per namespace (`ServerSideApply=true`), then sync v1 |
 | `scripts/06-remove-container.sh` | Commit `manifests/v2` (`feature-cache` removed) and sync both apps |
+| `scripts/07-replace-sync.sh` | Contrast: re-sync the compacted app with `Replace=true` (PUT). The zombie is removed, but fields set by other managers are wiped |
 | `scripts/verify.sh` | Print the verdict. Exits 0 if the bug reproduced. With `EXPECT_FIXED=1`, exits 0 only if both namespaces are clean, for testing a patch |
-| `scripts/render-timeline.sh` | Regenerate the [timeline](#timeline-how-the-container-survives-its-deletion) above from the snapshots in `.work/snapshots/` |
+| `scripts/render-timeline.sh` | Regenerate the [timeline](#timeline-how-the-container-survives-its-deletion) above and `docs/snapshots.js` (data for the interactive page) from the snapshots in `.work/snapshots/` |
 | `scripts/run-all.sh` | All of the above, plus the timeline. Re-runnable: it reuses the cluster and recreates the demo state |
 | `scripts/cluster-down.sh` | Delete the cluster and `.work/` |
 
@@ -716,18 +761,48 @@ kubectl --context kind-argocd-ssa-repro -n demo-compacted get deploy ranker -o y
 kubectl --context kind-argocd-ssa-repro -n argocd get app ranker-demo-compacted -o yaml
 ```
 
-## Possible directions for a fix (for discussion)
+## Proposed fix: authoritative PUT instead of PATCH
 
-* When the configured CSA manager is missing but an `ancient-changes` entry exists, Argo CD
-  could treat that as "migration state unknown". It could then surface a warning or condition,
-  or offer an opt-in to also migrate `ancient-changes`. Migrating it by default would be
-  risky, because the entry can also hold fields from unrelated managers.
-* Server-side diff could flag fields that are missing from the desired state but still live
-  only because an `Update` manager owns them. This is the "zombie" case, and today it is
-  invisible to the user.
-* Documentation: tell users to adopt CSA-created objects with SSA *early*. Alternatively, they
-  can run the migration themselves (`kubectl apply --server-side` with the CSA manager) before
-  the object gathers more than 10 Update managers.
+The root problem is that a server-side-apply PATCH only removes a field when the applier is its
+*sole* owner. Whether a field Git no longer contains gets deleted therefore depends on
+`managedFields` bookkeeping, and the API server does not preserve that bookkeeping faithfully
+(compaction, migrations, manual `kubectl` edits). As long as the sync is a PATCH, some path to a
+zombie field remains.
+
+The engine described in the [blog post](https://www.linkedin.com/blog/engineering/infrastructure/how-we-scale-deployments-with-a-custom-gitops-engine)
+takes a different approach: **no PATCH, only PUT**. Each deployment is authoritative for the parts
+of the object it owns, and the object is written with full-replacement semantics. Applied to Argo CD,
+a sync would:
+
+1. **Render the desired object** from Git, exactly as today.
+2. **Reconcile externally managed fields from the live object.** Some fields are deliberately owned
+   by something other than Git: `spec.replicas` under an HPA, labels or annotations added by
+   other controllers, fields injected by webhooks. These are declared up front, and their *live*
+   values are copied into the desired object. Everything else comes from Git.
+3. **PUT the result**, guarded by the live object's `resourceVersion`. Fields that are not in the
+   desired object, such as a container deleted from Git, are gone after the write, whoever
+   `managedFields` says owns them.
+4. **On `409 Conflict`, re-read the live object, recompute step 2 and retry** with exponential
+   backoff. A concurrent writer is never silently overwritten, and the deployment never acts on a
+   stale view.
+
+With this design the outcome no longer depends on `managedFields`: the object equals Git plus the
+explicitly declared external fields. That is the declarative contract users expect from GitOps.
+
+**Evidence from this repo** (step 7 of the [timeline](#timeline-how-the-container-survives-its-deletion),
+`scripts/07-replace-sync.sh`): Argo CD already has a PUT path, the `Replace=true` sync option
+(`kubectl replace`). Re-syncing the compacted object with it removes the zombie container right away:
+
+```
+before: containers=retriever,ranker,feature-cache  replicas=2  labels=app,team  retriever.env=LOG_LEVEL
+after:  containers=retriever,ranker  replicas=1  labels=app  retriever.env=
+```
+
+It also shows why step 2 is essential. `Replace=true` PUTs the Git manifest exactly as written, so
+it also wipes everything other managers set: `replicas` (2 → 1), the `team` label and the
+`LOG_LEVEL` env var. The missing piece in Argo CD is therefore not the PUT itself, but
+reconciling the declared external fields before the PUT, plus the conflict-retry loop. Together
+they make a PUT safe to use as the default way to sync.
 
 ## License
 

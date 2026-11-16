@@ -71,11 +71,15 @@ step "Bootstrapping Deployments with client-side kubectl apply"
 bootstrap "${NS_CONTROL}"
 bootstrap "${NS_COMPACTED}"
 snapshot 1-csa-apply "${NS_COMPACTED}"
+snapshot 1-csa-apply "${NS_CONTROL}"
 
 step "${NS_CONTROL}: adding field managers, staying under the cap"
 inflate "${NS_CONTROL}" control
 has_manager "${NS_CONTROL}" "${CSA_MANAGER}" Update \
   && ok "${CSA_MANAGER} entry still present" || die "control namespace was compacted unexpectedly"
+# The control namespace never compacts; steps 2 and 3 show the same state.
+snapshot 2-before-compaction "${NS_CONTROL}"
+snapshot 3-after-compaction "${NS_CONTROL}"
 
 step "${NS_COMPACTED}: adding field managers until the API server compacts managedFields"
 inflate "${NS_COMPACTED}" compact

@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zombie Container Mechanism</title>
+<meta name="description" content="Step-by-step, data-driven walkthrough of how Kubernetes managedFields compaction makes Argo CD server-side apply keep a container that was deleted from Git.">
+<style>
+:root {
+  --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0efeb; --border: #dcdad3;
+  --text: #1d1d1b; --muted: #66645d; --accent: #3a5bd9; --accent-soft: #e4e9fb;
+  --zombie: #b3261e; --zombie-soft: #fbe6e4; --ok: #1f7a3f; --ok-soft: #e1f3e7;
+  --warn: #8a5a00; --warn-soft: #fbf0d9; --ghost: #a9a69c;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151514; --surface: #1e1e1c; --surface-2: #272725; --border: #3a3936;
+    --text: #ecebe6; --muted: #a3a197; --accent: #8ea6ff; --accent-soft: #252c47;
+    --zombie: #ff8a80; --zombie-soft: #3d1f1d; --ok: #7fd49a; --ok-soft: #1b3324;
+    --warn: #f3c46b; --warn-soft: #3a2e15; --ghost: #6b6962;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151514; --surface: #1e1e1c; --surface-2: #272725; --border: #3a3936;
+  --text: #ecebe6; --muted: #a3a197; --accent: #8ea6ff; --accent-soft: #252c47;
+  --zombie: #ff8a80; --zombie-soft: #3d1f1d; --ok: #7fd49a; --ok-soft: #1b3324;
+  --warn: #f3c46b; --warn-soft: #3a2e15; --ghost: #6b6962;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.55 var(--sans); }
+code, pre, .mono { font-family: var(--mono); font-size: 13px; }
+a { color: var(--accent); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 16px 64px; }
+.controls, main, header { min-width: 0; max-width: 100%; }
+pre.yaml { white-space: pre-wrap; overflow-wrap: anywhere; }
+header h1 { font-size: 26px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+header p { margin: 4px 0; color: var(--muted); max-width: 820px; }
+.meta { font-size: 13px; }
+
+/* stepper */
+.controls { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 14px 0 10px; margin-top: 18px; border-bottom: 1px solid var(--border); }
+.steps { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; list-style: none; margin: 0; padding: 0; }
+.steps button { width: 100%; text-align: left; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  border-radius: 8px; padding: 8px 10px; cursor: pointer; font: inherit; font-size: 12.5px; line-height: 1.3; min-height: 58px; }
+.steps button .n { display: block; font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.steps button[aria-current="step"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.steps button.bad .n::after { content: " ●"; color: var(--zombie); }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-top: 10px; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--text); padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.seg button:disabled { opacity: .45; cursor: not-allowed; }
+.nav button { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.nav button:disabled { opacity: .4; cursor: default; }
+.hint { color: var(--muted); font-size: 12px; }
+
+/* layout */
+.headline { margin: 22px 0 6px; font-size: 20px; line-height: 1.3; }
+.status { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 16px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
+.pill b { font-weight: 600; }
+.pill.bad { border-color: var(--zombie); color: var(--zombie); background: var(--zombie-soft); }
+.pill.good { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+.grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+.card h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.story p { margin: 0 0 10px; }
+.span2 { grid-column: 1 / -1; }
+
+/* meter */
+.meter { display: flex; gap: 4px; align-items: flex-end; margin: 4px 0 6px; }
+.slot { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface-2); }
+.slot.on { background: var(--accent); border-color: var(--accent); }
+.slot.over { background: var(--zombie); border-color: var(--zombie); }
+.cap { width: 2px; height: 30px; background: var(--zombie); margin: 0 4px; border-radius: 2px; }
+.meter-label { font-size: 13px; color: var(--muted); }
+
+/* ownership matrix */
+.tablewrap { overflow-x: auto; }
+table.own { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
+.own th, .own td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; white-space: nowrap; }
+.own th { font-weight: 600; color: var(--muted); font-size: 12px; }
+.own th.fc, .own td.fc { background: var(--zombie-soft); }
+.own td.mgr { font-family: var(--mono); }
+.own td.op { color: var(--muted); font-size: 12px; }
+.own tr.ghost td { color: var(--ghost); text-decoration: line-through; text-decoration-color: var(--ghost); }
+.own tr.ghost td.why { text-decoration: none; font-style: italic; }
+.own tr.new td.mgr::after { content: "new"; margin-left: 6px; font: 600 10px var(--sans); color: var(--accent); border: 1px solid var(--accent); padding: 0 4px; border-radius: 4px; text-decoration: none; display: inline-block; }
+.chip { display: inline-block; min-width: 54px; text-align: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid transparent; cursor: help; }
+.chip.owns { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.fc .chip.owns { background: var(--zombie); color: #fff; border-color: var(--zombie); }
+.chip.lost { border: 1px dashed var(--ghost); color: var(--ghost); }
+.chip.none { color: var(--ghost); }
+.why { color: var(--muted); font-size: 12px; white-space: normal !important; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+/* spec */
+.spec { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.spec h4 { margin: 0 0 6px; font-size: 12px; color: var(--muted); font-weight: 600; }
+pre.yaml { margin: 0; background: var(--surface-2); border-radius: 8px; padding: 10px 12px; overflow-x: auto; line-height: 1.5; }
+.yaml .z { background: var(--zombie-soft); color: var(--zombie); display: block; margin: 0 -12px; padding: 0 12px; border-left: 3px solid var(--zombie); }
+.yaml .w { background: var(--warn-soft); color: var(--warn); display: block; margin: 0 -12px; padding: 0 12px; border-left: 3px solid var(--warn); }
+.yaml .k { color: var(--muted); }
+
+/* code evaluation */
+pre.code { margin: 0 0 10px; background: var(--surface-2); border-radius: 8px; padding: 10px 12px; overflow-x: auto; line-height: 1.5;  white-space: pre-wrap; overflow-wrap: anywhere; }
+.code .c { color: var(--muted); }
+.code .t { color: var(--ok); font-weight: 600; }
+.code .f { color: var(--zombie); font-weight: 600; }
+.src { font-size: 12px; color: var(--muted); }
+
+details.raw summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+details.raw pre { max-height: 320px; overflow: auto; }
+footer { margin-top: 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .steps { display: flex; overflow-x: auto; padding-bottom: 4px; }
+  .steps li { flex: 0 0 132px; }
+  .controls { position: static; }
+  .hint { display: none; }
+}
+@media (max-width: 560px) {
+  .spec { grid-template-columns: 1fr; }
+  header h1 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>How a container deleted from Git survives an Argo CD sync</h1>
+    <p>A step-by-step look at how Kubernetes <code>managedFields</code> compaction makes Argo CD (server-side apply) keep a
+      container that is no longer in Git, and why a PUT does not have this problem. Every table and spec on this page is
+      real API-server output, captured by the
+      <a href="https://github.com/rameshgi/argocd-ssa-managedfields-repro">reproduction repo</a>.</p>
+    <p class="meta">Based on <a href="https://www.linkedin.com/blog/engineering/infrastructure/how-we-scale-deployments-with-a-custom-gitops-engine"><i>How we scale deployments with a custom GitOps engine</i></a>
+      by Ramesh G. Iyer (LinkedIn Engineering). <span id="versions"></span></p>
+  </header>
+
+  <div class="controls">
+    <ol class="steps" id="steps"></ol>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Namespace">
+        <button id="ns-compacted" aria-pressed="true">demo-compacted (bug)</button>
+        <button id="ns-control" aria-pressed="false">demo-control (works)</button>
+      </div>
+      <span class="hint">← / → to step · c to switch namespace</span>
+      <div class="nav"><button id="prev">← Prev</button> <button id="next">Next →</button></div>
+    </div>
+  </div>
+
+  <main id="main"></main>
+
+  <footer>
+    Data: <code>docs/snapshots.js</code>, generated by <code>scripts/render-timeline.sh</code> from a run of
+    <code>scripts/run-all.sh</code>. Re-run the repro to regenerate it for your own Kubernetes / Argo CD versions.
+    Source links point at Argo CD commit <code>94037c4d</code> (v3.6.1) and Kubernetes v1.37.0.
+  </footer>
+</div>
+
+<noscript><p style="padding:16px">This page needs JavaScript. The same timeline is in the repository README.</p></noscript>
+<script src="snapshots.js"></script>
+<script>
+(function () {
+  "use strict";
+  const D = window.REPRO;
+  const main = document.getElementById("main");
+  if (!D) { main.innerHTML = "<p>snapshots.js not found. Run <code>scripts/run-all.sh</code> first.</p>"; return; }
+
+  const RC = D.removed;
+  const ARGO = "https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/";
+  const K8S = "https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/";
+  const CSA = "kubectl-client-side-apply", AM = "argocd-controller";
+
+  const STEPS = [
+    { id: "1-csa-apply",         git: "v1", short: "kubectl apply (client-side)" },
+    { id: "2-before-compaction", git: "v1", short: "Day-2 kubectl verbs" },
+    { id: "3-after-compaction",  git: "v1", short: "Compaction → ancient-changes" },
+    { id: "4-argo-sync-v1",      git: "v1", short: "Argo CD adopts (SSA)" },
+    { id: "5-v2-committed",      git: "v2", short: RC + " deleted in Git" },
+    { id: "6-argo-sync-v2",      git: "v2", short: "Argo CD syncs v2 (PATCH)" },
+    { id: "7-replace-sync",      git: "v2", short: "Same sync as PUT" },
+  ];
+  const snap = (id, ns) => D.snapshots.find(s => s.step === id && s.ns === ns);
+  const state = { i: 0, ns: "demo-compacted" };
+  try { const h = /step=(\d)/.exec(location.hash); if (h) state.i = Math.min(STEPS.length - 1, Math.max(0, +h[1] - 1)); } catch (e) {}
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const key = m => m.manager + "|" + m.operation + "|" + (m.subresource || "");
+  const label = m => m.manager + (m.subresource ? " (" + m.subresource + ")" : "");
+  const updates = s => s.managedFields.filter(m => m.operation === "Update");
+  const owners = (s, c) => s.managedFields.filter(m => m.claims[c]);
+  const link = (path, line, text) => `<a href="${ARGO}${path}#L${line}">${esc(text)}</a>`;
+  const allContainers = Array.from(new Set(D.git.v1.concat(...D.snapshots.map(s => s.containers.map(c => c.name)))));
+
+  if (D.argocd || D.k8s) document.getElementById("versions").textContent =
+    "Captured with Argo CD " + (D.argocd || "?") + " on Kubernetes " + (D.k8s || "?") + ".";
+
+  // ---------- step buttons ----------
+  const stepsEl = document.getElementById("steps");
+  STEPS.forEach((st, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.innerHTML = `<span class="n">Step ${i + 1}</span>${esc(st.short)}`;
+    b.addEventListener("click", () => go(i));
+    li.appendChild(b); stepsEl.appendChild(li);
+  });
+  document.getElementById("prev").onclick = () => go(state.i - 1);
+  document.getElementById("next").onclick = () => go(state.i + 1);
+  document.getElementById("ns-compacted").onclick = () => setNs("demo-compacted");
+  document.getElementById("ns-control").onclick = () => setNs("demo-control");
+  document.addEventListener("keydown", e => {
+    if (e.target.closest("input, textarea")) return;
+    if (e.key === "ArrowRight") go(state.i + 1);
+    else if (e.key === "ArrowLeft") go(state.i - 1);
+    else if (e.key === "c") setNs(state.ns === "demo-compacted" ? "demo-control" : "demo-compacted");
+  });
+  function go(i) { if (i < 0 || i >= STEPS.length) return; state.i = i; render(); }
+  function setNs(ns) { if (!snap(STEPS[state.i].id, ns)) return; state.ns = ns; render(); }
+
+  // ---------- per-step narrative + mechanism ----------
+  function story(st, s, prev, ns) {
+    const ctl = ns === "demo-control";
+    const n = updates(s).length;
+    const merged = prev ? updates(prev).filter(m => !s.managedFields.some(x => key(x) === key(m))).map(label) : [];
+    const fcOwners = owners(s, RC).map(m => m.manager);
+    const prevFcOwners = prev ? owners(prev, RC).map(m => m.manager) : [];
+    const code = (lines) => `<pre class="code">${lines}</pre>`;
+    switch (st.id) {
+      case "1-csa-apply": return {
+        h: `A human or CI job creates the Deployment with client-side <code>kubectl apply</code>`,
+        p: `<p>Client-side apply sends a PATCH with <code>operation: Update</code>. The API server records one
+            <code>managedFields</code> entry, <code>${CSA}</code>, which owns all three containers, including
+            <code>${RC}</code>.</p>`,
+        m: code(`<span class="c">// what Argo CD will look for later, to migrate ownership to itself</span>
+manager:   <b>${CSA}</b>
+operation: <b>Update</b>   <span class="c">// present → migration possible</span>`) };
+      case "2-before-compaction": return {
+        h: `Routine kubectl operations add Update managers, up to the cap`,
+        p: `<p>${esc(s.note || "Several kubectl verbs")} each register their own field manager. None of them touches
+            <code>${RC}</code>. There are now <b>${n}</b> Update entries.</p>
+            ${s.managedFields.some(m => !m.time) ? `<p>Note that <code>${esc(s.managedFields.filter(m => !m.time).map(label).join(", "))}</code> has <b>no timestamp</b>, so the API server sorts it as the oldest entry.</p>` : ""}`,
+        m: code(`<span class="c">// capmanagers.go: capUpdateManagers(), run after every Update</span>
+if len(updaters) &lt;= f.maxUpdateManagers {   <span class="c">// ${n} &lt;= 10</span>
+    return managed, nil                       <span class="t">→ ${n <= 10 ? "true: nothing happens" : "false"}</span>
+}`) + `<p class="src"><a href="${K8S}capmanagers.go">capmanagers.go</a> · <a href="${K8S}fieldmanager.go#L35">DefaultMaxUpdateManagers = 10</a></p>` };
+      case "3-after-compaction":
+        if (ctl) return { h: `No compaction in the control namespace`,
+          p: `<p>The control namespace stays at ${n} Update managers, under the cap, so the <code>${CSA}</code> entry survives.</p>`,
+          m: code(`len(updaters) &lt;= 10   <span class="c">// ${n} &lt;= 10</span>  <span class="t">→ true: no compaction</span>`) };
+        return {
+          h: `Update manager #11 (<code>${esc(s.note)}</code>) triggers compaction`,
+          p: `<p>The API server sorts Update entries by time and <b>merges the oldest ones</b> into a single entry named
+              <code>ancient-changes</code>: ${merged.map(m => `<code>${esc(m)}</code>`).join(" + ")}.</p>
+              <p>The fields are kept, but the <b>manager's name is lost</b>. <code>${RC}</code> is now owned by
+              <code>ancient-changes</code>.</p>`,
+          m: code(`len(updaters) &lt;= 10   <span class="c">// 11 &lt;= 10</span>  <span class="f">→ false</span>
+sort.Slice(updaters, <span class="c">/* oldest first; no timestamp = oldest */</span>)
+<span class="c">// merge the oldest into "ancient-changes" until len == 10</span>
+${merged.map(m => `merge(<b>${esc(m)}</b>) → ancient-changes`).join("\n")}`) +
+            `<p class="src"><a href="${K8S}capmanagers.go">capmanagers.go: capUpdateManagers()</a></p>` };
+      case "4-argo-sync-v1": {
+        const prevHas = prev && prev.managedFields.some(m => m.manager === CSA && m.operation === "Update");
+        const rows = (prev ? prev.managedFields : []).map(m =>
+          `<span class="c">// ${esc(label(m).padEnd(30))}</span> ${m.manager === CSA && m.operation === "Update" ? '<span class="t">match</span>' : "no"}`).join("\n");
+        return {
+          h: ctl ? `Argo CD adopts the object and <b>migrates</b> ownership from <code>${CSA}</code>`
+                 : `Argo CD adopts the object, but the migration lookup <b>finds nothing</b>`,
+          p: ctl
+            ? `<p>Before the first server-side apply, Argo CD finds the <code>${CSA}</code> entry. It uses
+               <code>csaupgrade</code> to move that entry's fields to <code>${AM}</code>, then deletes the entry.
+               <code>${AM}</code> is now the <b>sole owner</b> of <code>${RC}</code>.</p>`
+            : `<p>Argo CD only migrates when an entry has exactly <code>manager == "${CSA}"</code> and
+               <code>operation == Update</code>. That entry was renamed in step 3, so the migration is <b>silently
+               skipped</b>. The server-side apply then makes <code>${AM}</code> a <b>co-owner</b> of
+               <code>${RC}</code>, next to <code>ancient-changes</code>.</p>`,
+          m: code(`<span class="c">// sync_context.go: needsClientSideApplyMigration(liveObj, "${CSA}")</span>
+for _, field := range managedFields {
+    if field.Manager == fieldManager &amp;&amp; field.Operation == Update {
+        return true
+    }
+}
+${rows}
+<span class="c">// result:</span> ${prevHas ? '<span class="t">true → performCSAUpgradeMigration()</span>' : '<span class="f">false → migration skipped</span>'}`) +
+            `<p class="src">${link("gitops-engine/pkg/sync/sync_context.go", "1341-L1354", "sync_context.go:1341")} ·
+              ${link("gitops-engine/pkg/sync/sync_context.go", "1456", "called from applyObject (:1456)")} ·
+              ${link("gitops-engine/pkg/sync/sync_context.go", "1398", "csaupgrade (:1398)")}</p>` };
+      }
+      case "5-v2-committed": {
+        const others = fcOwners.filter(m => m !== AM);
+        return {
+          h: ctl ? `<code>${RC}</code> deleted in Git: Argo CD correctly shows <b>OutOfSync</b>`
+                 : `<code>${RC}</code> deleted in Git, but Argo CD still says <b>Synced</b>`,
+          p: `<p>Server-side diff runs a dry-run server-side apply of v2 and compares the predicted object with the live one.
+              SSA removes a field only if the applier owned it <i>and no other manager does</i>.</p>
+              <p>${others.length ? `<code>${esc(others.join(", "))}</code> also owns <code>${RC}</code>, so the dry run
+              predicts that it <b>stays</b>. The prediction equals the live object, so there is no diff, and the change in Git is invisible.`
+              : `Nobody else owns <code>${RC}</code>, so the dry run predicts that it is removed, and the diff shows it.`}</p>`,
+          m: code(`<span class="c">// dry-run SSA of v2: who else owns ${RC}?</span>
+owners(${RC})           = { ${esc(fcOwners.join(", "))} }
+owners - ${AM} = { ${esc(others.join(", ") || "∅")} }
+<span class="c">// predicted:</span> ${others.length ? `<span class="f">${RC} kept → no diff → Synced</span>` : `<span class="t">${RC} removed → diff → OutOfSync</span>`}`) +
+            `<p class="src">${link("gitops-engine/pkg/diff/diff.go", "172", "diff.go: serverSideDiff (:172)")} ·
+              ${link("gitops-engine/pkg/diff/diff.go", "226", "removeWebhookMutation (:226)")}</p>` };
+      }
+      case "6-argo-sync-v2": {
+        const before = prevFcOwners, kept = fcOwners;
+        return {
+          h: ctl ? `Argo CD syncs v2: <code>${RC}</code> is removed`
+                 : `Argo CD syncs v2: the sync succeeds, but <code>${RC}</code> is <b>still running</b>`,
+          p: ctl
+            ? `<p><code>${AM}</code> was the only owner, so when it stops claiming the container, the API server deletes it.</p>`
+            : `<p>The server-side apply PATCH drops <code>${AM}</code>'s claim on <code>${RC}</code>. The API server
+               keeps any field that another manager still owns, and <code>ancient-changes</code> still owns this one.
+               This is correct SSA behaviour. The sync is <i>Succeeded</i>, the app is <b>Synced/Healthy</b>, and the
+               container keeps running.</p>`,
+          m: code(`<span class="c">// SSA PATCH of v2 by ${AM}</span>
+owners before = { ${esc(before.join(", "))} }
+release(${AM})
+owners after  = { ${esc(kept.join(", ") || "∅")} }
+<span class="c">// field deleted only when owners == ∅ →</span> ${kept.length ? `<span class="f">${RC} KEPT (zombie)</span>` : `<span class="t">${RC} deleted</span>`}`) };
+      }
+      case "7-replace-sync": {
+        const p6 = snap("6-argo-sync-v2", ns);
+        const lost = [];
+        if (p6) {
+          if (p6.replicas !== s.replicas) lost.push(`spec.replicas: ${p6.replicas} → ${s.replicas}`);
+          Object.keys(p6.labels).filter(k => !(k in s.labels)).forEach(k => lost.push(`metadata.labels.${k}`));
+          p6.containers.forEach(c => { const now = s.containers.find(x => x.name === c.name);
+            if (now) c.env.filter(e => !now.env.includes(e)).forEach(e => lost.push(`${c.name}.env ${e}`)); });
+        }
+        return {
+          h: `The same sync as a <b>PUT</b> (<code>Replace=true</code>): <code>${RC}</code> is gone`,
+          p: `<p>A PUT replaces the whole object with the desired state. It never consults <code>managedFields</code>,
+              so it doesn't matter who owns <code>${RC}</code>: it is not in the desired state, so it is gone.</p>
+              <p>Argo CD's <code>Replace=true</code> sends the Git manifest exactly as written, so fields set by other
+              managers are wiped too: ${lost.map(x => `<code>${esc(x)}</code>`).join(", ") || "none"}. A PUT-based sync
+              therefore has to copy externally managed fields from the live object into the desired state before it
+              PUTs, which is what the blog's engine does. See the README's proposed fix.</p>`,
+          m: code(`<span class="c">// PUT: object := desired (resourceVersion-guarded)</span>
+containers(desired) = { ${esc(D.git.v2.join(", "))} }
+<span class="c">// managedFields not consulted →</span> <span class="t">${RC} removed</span>
+<span class="c">// fields set by other managers and not in desired:</span>
+${lost.map(x => `<span class="f">wiped</span> ${esc(x)}`).join("\n") || "none"}`) };
+      }
+    }
+  }
+
+  // ---------- ownership matrix ----------
+  function matrix(st, s, prev) {
+    const reason = m =>
+      st.id === "3-after-compaction" ? "merged into ancient-changes" :
+      st.id === "4-argo-sync-v1" && m.manager === CSA ? "migrated into " + AM + " (csaupgrade)" :
+      st.id === "7-replace-sync" ? "fields wiped by PUT" :
+      "entry gone: no longer owns any field";
+    const cur = new Map(s.managedFields.map(m => [key(m), m]));
+    const prevMap = new Map((prev ? prev.managedFields : []).map(m => [key(m), m]));
+    const ghosts = prev ? prev.managedFields.filter(m => !cur.has(key(m))) : [];
+    const head = `<tr><th>manager</th><th>operation</th>${allContainers.map(c =>
+      `<th class="${c === RC ? "fc" : ""}">${esc(c)}</th>`).join("")}<th>other fields</th></tr>`;
+    const cell = (m, c, pm, ghost) => {
+      const n = m.claims[c] ? m.claims[c].length : 0;
+      const had = pm && pm.claims[c];
+      const tip = n ? esc(m.claims[c].join("\n")) : "";
+      let inner;
+      if (n) inner = `<span class="chip owns" title="${tip}">owns · ${n}</span>`;
+      else if (had && !ghost) inner = `<span class="chip lost" title="ownership released in this step">released</span>`;
+      else inner = `<span class="chip none">·</span>`;
+      return `<td class="${c === RC ? "fc" : ""}">${inner}</td>`;
+    };
+    const row = (m, ghost) => {
+      const pm = prevMap.get(key(m));
+      const cls = ghost ? "ghost" : (prev && !pm ? "new" : "");
+      const other = m.other.length;
+      return `<tr class="${cls}"><td class="mgr">${esc(m.manager)}</td>
+        <td class="op">${esc(m.operation)}${m.subresource ? " · " + esc(m.subresource) : ""}${m.time ? "" : " · no time"}</td>
+        ${allContainers.map(c => cell(m, c, pm, ghost)).join("")}
+        ${ghost ? `<td class="why">${esc(reason(m))}</td>` :
+          `<td class="op" title="${esc(m.other.join("\n"))}">${other ? other + " field" + (other > 1 ? "s" : "") : "—"}</td>`}</tr>`;
+    };
+    return `<div class="tablewrap"><table class="own"><thead>${head}</thead><tbody>
+      ${s.managedFields.map(m => row(m, false)).join("")}${ghosts.map(m => row(m, true)).join("")}
+      </tbody></table></div>
+      <div class="legend"><span><span class="chip owns">owns · n</span> claims n leaf fields (hover to list them)</span>
+        <span><span class="chip lost">released</span> owned in the previous step</span>
+        <span>struck through = entry gone since the previous step</span></div>`;
+  }
+
+  // ---------- spec ----------
+  function yaml(containers, gitNames, mark) {
+    const lines = ["<span class=\"k\">containers:</span>"];
+    containers.forEach(c => {
+      const zombie = mark && !gitNames.includes(c.name);
+      const block = [`- name: ${esc(c.name)}`, `  image: ${esc(c.image)}`].concat(c.env.length ? [`  env: [${esc(c.env.join(", "))}]`] : []);
+      lines.push(zombie ? `<span class="z">${block.join("\n")}   ← not in Git</span>` : block.join("\n"));
+    });
+    return `<pre class="yaml">${lines.join("\n")}</pre>`;
+  }
+  function gitContainers(v) { return D.git[v].map(n => ({ name: n, image: "registry.k8s.io/pause:3.10", env: n === RC ? ["CACHE_MODE=legacy"] : [] })); }
+
+  // ---------- render ----------
+  function render() {
+    const st = STEPS[state.i];
+    if (!snap(st.id, state.ns)) state.ns = "demo-compacted";
+    const s = snap(st.id, state.ns);
+    const prev = state.i > 0 ? snap(STEPS[state.i - 1].id, state.ns) : null;
+    const sto = story(st, s, prev, state.ns);
+    const n = updates(s).length;
+    const zombie = st.git === "v2" && s.containers.some(c => c.name === RC);
+    const fcOwn = owners(s, RC).map(m => m.manager);
+
+    [...stepsEl.querySelectorAll("button")].forEach((b, i) => {
+      b.toggleAttribute("aria-current", false); if (i === state.i) b.setAttribute("aria-current", "step");
+      const sd = snap(STEPS[i].id, state.ns);
+      b.classList.toggle("bad", !!sd && STEPS[i].git === "v2" && sd.containers.some(c => c.name === RC));
+    });
+    document.getElementById("prev").disabled = state.i === 0;
+    document.getElementById("next").disabled = state.i === STEPS.length - 1;
+    ["compacted", "control"].forEach(x => {
+      const b = document.getElementById("ns-" + x);
+      b.setAttribute("aria-pressed", String(state.ns === "demo-" + x));
+      b.disabled = !snap(st.id, "demo-" + x);
+      b.title = b.disabled ? "not captured for this step" : "";
+    });
+    try { history.replaceState(null, "", "#step=" + (state.i + 1)); } catch (e) {}
+
+    const slots = Array.from({ length: 11 }, (_, i) => {
+      const peak = st.id === "3-after-compaction" && state.ns === "demo-compacted" && i === 10;
+      return (i === 10 ? '<span class="cap" title="cap: 10 Update entries"></span>' : "") +
+        `<span class="slot ${peak ? "over" : i < n ? "on" : ""}" title="${peak ? "11th Update manager → compaction" : ""}"></span>`;
+    }).join("");
+
+    main.innerHTML = `
+      <h2 class="headline">Step ${state.i + 1}: ${sto.h}</h2>
+      <div class="status">
+        <span class="pill">namespace <b>${esc(state.ns)}</b></span>
+        <span class="pill">Git <b>manifests/${st.git}</b></span>
+        <span class="pill">Argo CD <b>${esc(s.argo || "n/a")}</b></span>
+        <span class="pill ${zombie ? "bad" : st.git === "v2" ? "good" : ""}">live containers <b>${s.containers.length}</b>${zombie ? " · zombie " + esc(RC) : ""}</span>
+        <span class="pill">owners of ${esc(RC)} <b>${esc(fcOwn.join(", ") || "none")}</b></span>
+      </div>
+      <div class="grid">
+        <section class="card story"><h3>What happens</h3>${sto.p}</section>
+        <section class="card"><h3>The mechanism</h3>${sto.m}</section>
+        <section class="card span2"><h3>metadata.managedFields: who owns which container</h3>
+          <div class="meter" aria-label="${n} of 10 Update entries">${slots}</div>
+          <div class="meter-label">${n} Update entries (cap 10)${st.id === "3-after-compaction" && state.ns === "demo-compacted" ? " · reached 11, compacted back to 10" : ""} · Apply entries are never capped</div>
+          <br>${matrix(st, s, prev)}</section>
+        <section class="card span2"><h3>Container spec</h3>
+          <div class="spec">
+            <div><h4>Git: manifests/${st.git}/deployment.yaml</h4>${yaml(gitContainers(st.git), D.git[st.git], false)}</div>
+            <div><h4>Live: ${esc(state.ns)}/ranker</h4>${yaml(s.containers, D.git[st.git], true)}
+              <p class="src">replicas: ${esc(s.replicas)} · labels: ${esc(Object.keys(s.labels).join(", "))}</p></div>
+          </div>
+          <details class="raw"><summary>Raw fieldsV1 claims on <code>${esc(RC)}</code></summary>
+            <pre class="yaml">${owners(s, RC).map(m => `<span class="k"># ${esc(m.manager)} (${esc(m.operation)})</span>\n` +
+              m.claims[RC].map(esc).join("\n")).join("\n\n") || "# nobody claims " + esc(RC)}</pre></details>
+        </section>
+      </div>`;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
