@@ -11,10 +11,16 @@ problem LinkedIn ran into while running Argo CD with server-side apply at scale:
 > containers may be lost. … the PATCH operation leaves the containers as they are, because
 > they appear to be owned externally.
 
+The post describes this as lost ownership. More precisely, ownership is merged into
+`ancient-changes` and only the original manager's name is lost. That is exactly why the
+container survives.
+
 The post describes the symptom from production. This repo is a minimal, self-contained way for
 Argo CD maintainers to reproduce it, end to end, on a local [kind](https://kind.sigs.k8s.io/) cluster.
-It pins down the exact mechanism: Kubernetes compacts `managedFields`, and as a result Argo CD
-silently skips its client-side-apply → server-side-apply migration.
+It isolates a concrete mechanism that produces this symptom: Kubernetes compacts `managedFields`,
+and as a result Argo CD silently skips its client-side-apply → server-side-apply migration. Other
+paths to the same symptom may exist. Any `Update` manager that co-owns a field Argo CD stops
+applying keeps that field alive, with or without compaction.
 
 **Result:** a container removed from Git keeps running in the cluster, and Argo CD reports
 the Application as `Synced/Healthy`. Argo CD's diff never shows it as drift.
@@ -54,8 +60,8 @@ writing the Application's `.operation` field.
 
 ## Background: what the API server actually does
 
-In [`capmanagers.go`](https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/capmanagers.go),
-the API server keeps at most `DefaultMaxUpdateManagers = 10` `managedFields` entries with
+In [`capmanagers.go`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/capmanagers.go) (Kubernetes v1.37.0, unchanged since at least v1.34),
+the API server keeps at most [`DefaultMaxUpdateManagers = 10`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/fieldmanager.go#L35) `managedFields` entries with
 **`operation: Update`**. The cap is checked on every Update. When an object has more than 10
 such entries, the API server sorts them by timestamp and **merges the oldest ones** into one
 entry named **`ancient-changes`**. That entry holds the union of their field sets.
@@ -74,16 +80,16 @@ Three details matter for this bug:
 ## Root cause in Argo CD
 
 The Argo CD code that depends on a manager's name is the **client-side-apply → server-side-apply
-migration**. It runs on every SSA sync (references are for tag `v3.6.1`, commit `94037c4d`):
+migration**. It runs on every SSA sync. The links point at commit [`94037c4d`](https://github.com/argoproj/argo-cd/tree/94037c4d4e1af4bd0651d37a179fbd9e347e668c), which is tag `v3.6.1`:
 
-* `gitops-engine/pkg/sync/sync_context.go:1456`: before applying, `applyObject` calls
+* [`gitops-engine/pkg/sync/sync_context.go:1456`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1456): before applying, `applyObject` calls
   `needsClientSideApplyMigration(t.liveObj, sc.clientSideApplyMigrationManager)`.
-* `gitops-engine/pkg/sync/sync_context.go:1341-1354`: that function returns true only when
+* [`gitops-engine/pkg/sync/sync_context.go:1341-1354`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1341-L1354): that function returns true only when
   an entry has `field.Manager == "kubectl-client-side-apply"` **and**
   `field.Operation == Update`. The manager name defaults to
-  `DefaultClientSideApplyMigrationManager` (`gitops-engine/pkg/sync/common/types.go:58`).
+  `DefaultClientSideApplyMigrationManager` ([`gitops-engine/pkg/sync/common/types.go:58`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/common/types.go#L58)).
   The `argocd.argoproj.io/client-side-apply-migration-manager` annotation can override it.
-* `gitops-engine/pkg/sync/sync_context.go:1398`: when the function returns true,
+* [`gitops-engine/pkg/sync/sync_context.go:1398`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1398): when the function returns true,
   `csaupgrade.UpgradeManagedFieldsPatch` moves that manager's fields to `argocd-controller`.
   Argo CD then owns the containers and can remove them later.
 
@@ -95,8 +101,8 @@ lookup misses and the migration is silently skipped:
 2. The container is removed from Git, and Argo CD applies the new manifest. SSA drops
    `argocd-controller`'s claim on the container. `ancient-changes` still owns it, so the
    API server **keeps the container**. This is correct SSA behaviour.
-3. Server-side diff (`gitops-engine/pkg/diff/diff.go:172`, `serverSideDiff` /
-   `removeWebhookMutation`) works from a dry-run SSA. The dry run predicts the same
+3. Server-side diff ([`gitops-engine/pkg/diff/diff.go:172`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L172), `serverSideDiff` /
+   [`removeWebhookMutation`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L226)) works from a dry-run SSA. The dry run predicts the same
    outcome: the container stays. The predicted live state therefore equals the live state,
    and the app is **`Synced` both before and after the sync**. In the control namespace, the
    same Git change shows `OutOfSync` as expected.
@@ -104,8 +110,8 @@ lookup misses and the migration is silently skipped:
 The objects that hit this are common. Anything created with client-side `kubectl apply` gets a
 `kubectl-client-side-apply` entry: bootstrap scripts, CI, migration tooling, or a human. If that
 object then gathers 10 more Update managers before Argo CD adopts it with `ServerSideApply=true`,
-it is affected. That is roughly a week of on-call `kubectl label/annotate/rollout restart` on
-a busy object.
+it is affected. In this repro, eight routine kubectl operations, plus the controller's own `status`
+entry, were enough to trigger compaction.
 
 ## Timeline: how the container survives its deletion
 
@@ -250,7 +256,7 @@ Routine operations each register their own **Update** manager: `kubectl (scale)`
 <details>
 <summary><b>Step 3 · Update manager #11 (<code>migration-orchestrator</code>) → API server compacts managedFields</b> — Argo CD: <code>n/a</code></summary>
 
-There are now more than `DefaultMaxUpdateManagers = 10` Update entries, so the API server (`capmanagers.go`) sorts the
+There are now more than `DefaultMaxUpdateManagers = 10` Update entries, so the API server ([`capmanagers.go`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/capmanagers.go)) sorts the
 Update entries by time and merges the oldest ones, `kubectl (scale)`, `kubectl-client-side-apply`, into **`ancient-changes`**. The fields survive, but the
 `kubectl-client-side-apply` entry no longer exists under that name. `feature-cache` is now owned by
 `ancient-changes`.
@@ -322,7 +328,7 @@ Update entries by time and merges the oldest ones, `kubectl (scale)`, `kubectl-c
 <details>
 <summary><b>Step 4 · Argo CD adopts the object: first sync with <code>ServerSideApply=true</code> (Git = v1)</b> — Argo CD: <code>Synced/Healthy</code></summary>
 
-Before applying, Argo CD calls `needsClientSideApplyMigration` (`gitops-engine/pkg/sync/sync_context.go:1341`).
+Before applying, Argo CD calls `needsClientSideApplyMigration` ([`gitops-engine/pkg/sync/sync_context.go:1341`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1341)).
 It looks for an entry with `manager == "kubectl-client-side-apply"` and `operation == Update`, finds none,
 and **skips the csaupgrade migration**. The server-side apply then makes `argocd-controller` (Apply) a
 *co-owner* of `feature-cache`, next to `ancient-changes`.
@@ -446,7 +452,7 @@ Here the `kubectl-client-side-apply` entry still exists, so `performCSAUpgradeMi
 <details>
 <summary><b>Step 5 · <code>feature-cache</code> deleted in Git (v2), before sync</b> — Argo CD: <code>Synced/Healthy</code></summary>
 
-Server-side diff (`gitops-engine/pkg/diff/diff.go:172`) runs a dry-run SSA of v2. Because `ancient-changes`
+Server-side diff ([`gitops-engine/pkg/diff/diff.go:172`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L172)) runs a dry-run SSA of v2. Because `ancient-changes`
 still owns the container, the dry run predicts that the container **stays**. The predicted state equals live, so
 Argo CD says **Synced**: the change in Git is invisible.
 
@@ -722,3 +728,7 @@ kubectl --context kind-argocd-ssa-repro -n argocd get app ranker-demo-compacted 
 * Documentation: tell users to adopt CSA-created objects with SSA *early*. Alternatively, they
   can run the migration themselves (`kubectl apply --server-side` with the CSA manager) before
   the object gathers more than 10 Update managers.
+
+## License
+
+[Apache License 2.0](LICENSE), the same license as Argo CD. Copyright 2026 Ramesh G. Iyer.

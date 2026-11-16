@@ -130,14 +130,14 @@ step_md 2 "Day-2 kubectl verbs push Update managers to the cap (${n_before})" "$
 \`${REMOVED_CONTAINER}\`.${untimed:+ Note that ${untimed} has **no timestamp**. The API server sorts entries without a timestamp as the oldest.}"
 
 step_md 3 "Update manager #$((n_before + 1)) (\`${trigger}\`) → API server compacts managedFields" "$(snap 3-after-compaction "$C")" "" \
-"There are now more than \`DefaultMaxUpdateManagers = 10\` Update entries, so the API server (\`capmanagers.go\`) sorts the
+"There are now more than \`DefaultMaxUpdateManagers = 10\` Update entries, so the API server ([\`capmanagers.go\`](https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/capmanagers.go)) sorts the
 Update entries by time and merges the oldest ones, ${merged}, into **\`ancient-changes\`**. The fields survive, but the
 \`${CSA_MANAGER}\` entry no longer exists under that name. \`${REMOVED_CONTAINER}\` is now owned by
 \`ancient-changes\`."
 
 step_md 4 "Argo CD adopts the object: first sync with \`ServerSideApply=true\` (Git = v1)" \
   "$(snap 4-argo-sync-v1 "$C")" "" \
-"Before applying, Argo CD calls \`needsClientSideApplyMigration\` (\`gitops-engine/pkg/sync/sync_context.go:1341\`).
+"Before applying, Argo CD calls \`needsClientSideApplyMigration\` ([\`gitops-engine/pkg/sync/sync_context.go:1341\`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/sync/sync_context.go#L1341)).
 It looks for an entry with \`manager == \"${CSA_MANAGER}\"\` and \`operation == Update\`, finds none,
 and **skips the csaupgrade migration**. The server-side apply then makes \`${ARGO_MANAGER}\` (Apply) a
 *co-owner* of \`${REMOVED_CONTAINER}\`, next to \`ancient-changes\`." \
@@ -146,7 +146,7 @@ and **skips the csaupgrade migration**. The server-side apply then makes \`${ARG
 \`${ARGO_MANAGER}\` and deletes the entry. \`${ARGO_MANAGER}\` is now the **sole** owner of \`${REMOVED_CONTAINER}\`."
 
 step_md 5 "\`${REMOVED_CONTAINER}\` deleted in Git (v2), before sync" "$(snap 5-v2-committed "$C")" diff \
-"Server-side diff (\`gitops-engine/pkg/diff/diff.go:172\`) runs a dry-run SSA of v2. Because \`ancient-changes\`
+"Server-side diff ([\`gitops-engine/pkg/diff/diff.go:172\`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L172)) runs a dry-run SSA of v2. Because \`ancient-changes\`
 still owns the container, the dry run predicts that the container **stays**. The predicted state equals live, so
 Argo CD says **Synced**: the change in Git is invisible." \
   "$(snap 5-v2-committed "$K")" \
