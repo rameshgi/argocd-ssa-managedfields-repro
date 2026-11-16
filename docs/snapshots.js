@@ -14,16 +14,25 @@ window.REPRO = {
       "ranker"
     ]
   },
+  "manifests": {
+    "v1": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ranker\n  labels:\n    app: ranker\nspec:\n  selector:\n    matchLabels:\n      app: ranker\n  template:\n    metadata:\n      labels:\n        app: ranker\n    spec:\n      terminationGracePeriodSeconds: 1\n      containers:\n        - name: retriever\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 5m, memory: 8Mi}\n        - name: ranker\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 5m, memory: 8Mi}\n        - name: feature-cache\n          image: registry.k8s.io/pause:3.10\n          env:\n            - name: CACHE_MODE\n              value: legacy\n          resources:\n            requests: {cpu: 5m, memory: 8Mi}\n",
+    "v2": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ranker\n  labels:\n    app: ranker\nspec:\n  selector:\n    matchLabels:\n      app: ranker\n  template:\n    metadata:\n      labels:\n        app: ranker\n    spec:\n      terminationGracePeriodSeconds: 1\n      containers:\n        - name: retriever\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 5m, memory: 8Mi}\n        - name: ranker\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 5m, memory: 8Mi}\n"
+  },
   "snapshots": [
     {
       "step": "1-csa-apply",
       "ns": "demo-compacted",
       "argo": "",
-      "note": "",
+      "note": "kubectl apply -f manifests/v1/deployment.yaml   # client-side apply",
       "replicas": 1,
       "labels": {
         "app": "ranker"
       },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}"
+      },
+      "tplAnnotations": {},
       "containers": [
         {
           "name": "retriever",
@@ -39,48 +48,20 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "kubectl-client-side-apply",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:58Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
             "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -91,6 +72,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -102,9 +106,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:23:59Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:27Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -132,11 +135,16 @@ window.REPRO = {
       "step": "1-csa-apply",
       "ns": "demo-control",
       "argo": "",
-      "note": "",
+      "note": "kubectl apply -f manifests/v1/deployment.yaml   # client-side apply",
       "replicas": 1,
       "labels": {
         "app": "ranker"
       },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}"
+      },
+      "tplAnnotations": {},
       "containers": [
         {
           "name": "retriever",
@@ -152,18 +160,66 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
         {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:23:56Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:24Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -183,60 +239,6 @@ window.REPRO = {
             "status.replicas",
             "status.terminatingReplicas",
             "status.updatedReplicas"
-          ]
-        },
-        {
-          "manager": "kubectl-client-side-apply",
-          "operation": "Update",
-          "subresource": null,
-          "time": "2026-11-16T05:23:56Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
-            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
-            "metadata.labels.app",
-            "spec.progressDeadlineSeconds",
-            "spec.replicas",
-            "spec.revisionHistoryLimit",
-            "spec.selector",
-            "spec.strategy.rollingUpdate.maxSurge",
-            "spec.strategy.rollingUpdate.maxUnavailable",
-            "spec.strategy.type",
-            "spec.template.metadata.labels.app",
-            "spec.template.spec.dnsPolicy",
-            "spec.template.spec.restartPolicy",
-            "spec.template.spec.schedulerName",
-            "spec.template.spec.securityContext",
-            "spec.template.spec.terminationGracePeriodSeconds"
           ]
         }
       ]
@@ -251,12 +253,26 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "replaced-at": "1794807409",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -268,18 +284,20 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "kubectl",
           "operation": "Update",
           "subresource": "scale",
           "time": null,
-          "claims": {},
-          "other": [
+          "leaves": [
             "spec.replicas"
           ]
         },
@@ -287,39 +305,8 @@ window.REPRO = {
           "manager": "kubectl-client-side-apply",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:58Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
             "metadata.annotations",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -329,6 +316,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -340,9 +350,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:10Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -350,9 +359,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:12Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -360,9 +368,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:13Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -370,22 +377,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:14Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:16Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -393,9 +396,8 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:19Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
             "metadata.annotations.edited-by"
           ]
         },
@@ -403,9 +405,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:20Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:49Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -431,9 +432,8 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:20Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:49Z",
+          "leaves": [
             "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
             "metadata.annotations.replaced-at"
           ]
@@ -450,12 +450,24 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:35-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -467,18 +479,20 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "kubectl",
           "operation": "Update",
           "subresource": "scale",
           "time": null,
-          "claims": {},
-          "other": [
+          "leaves": [
             "spec.replicas"
           ]
         },
@@ -486,39 +500,8 @@ window.REPRO = {
           "manager": "kubectl-client-side-apply",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:56Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
             "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -528,6 +511,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -539,9 +545,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:02Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -549,9 +554,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:04Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -559,9 +563,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:05Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -569,22 +572,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:06Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:07Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -592,9 +591,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:09Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:37Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -615,6 +613,2388 @@ window.REPRO = {
             "status.terminatingReplicas",
             "status.unavailableReplicas",
             "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-01",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl label deploy ranker team=search --overwrite",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:27Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-01",
+      "ns": "demo-control",
+      "argo": "",
+      "note": "kubectl label deploy ranker team=search --overwrite",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:24Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-02",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl annotate deploy ranker owner=ranking-oncall --overwrite",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-02",
+      "ns": "demo-control",
+      "argo": "",
+      "note": "kubectl annotate deploy ranker owner=ranking-oncall --overwrite",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-03",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl patch deploy ranker --type merge -p '{\"metadata\":{\"annotations\":{\"ticket\":\"INC-1234\"}}}'",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-03",
+      "ns": "demo-control",
+      "argo": "",
+      "note": "kubectl patch deploy ranker --type merge -p '{\"metadata\":{\"annotations\":{\"ticket\":\"INC-1234\"}}}'",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "1",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-04",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl set env deploy/ranker -c retriever LOG_LEVEL=debug",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "2",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-04",
+      "ns": "demo-control",
+      "argo": "",
+      "note": "kubectl set env deploy/ranker -c retriever LOG_LEVEL=debug",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "2",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-05",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl rollout restart deploy/ranker",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-rollout",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
+            "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-05",
+      "ns": "demo-control",
+      "argo": "",
+      "note": "kubectl rollout restart deploy/ranker",
+      "replicas": 1,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:35-08:00"
+      },
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-rollout",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
+            "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-06",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl scale deploy/ranker --replicas=2",
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl",
+          "operation": "Update",
+          "subresource": "scale",
+          "time": null,
+          "leaves": [
+            "spec.replicas"
+          ]
+        },
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        },
+        {
+          "manager": "kubectl-rollout",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
+            "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:46Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-06",
+      "ns": "demo-control",
+      "argo": "",
+      "note": "kubectl scale deploy/ranker --replicas=2",
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:35-08:00"
+      },
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl",
+          "operation": "Update",
+          "subresource": "scale",
+          "time": null,
+          "leaves": [
+            "spec.replicas"
+          ]
+        },
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        },
+        {
+          "manager": "kubectl-rollout",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
+            "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:37Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-07",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl edit deploy/ranker -o json   # editor adds annotation edited-by",
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl",
+          "operation": "Update",
+          "subresource": "scale",
+          "time": null,
+          "leaves": [
+            "spec.replicas"
+          ]
+        },
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        },
+        {
+          "manager": "kubectl-rollout",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
+            "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-edit",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
+            "metadata.annotations.edited-by"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-08",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl get deploy ranker -o json | jq '.metadata.annotations.\"replaced-at\"=\"<now>\"' | kubectl replace -f -",
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "replaced-at": "1794807409",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "kubectl",
+          "operation": "Update",
+          "subresource": "scale",
+          "time": null,
+          "leaves": [
+            "spec.replicas"
+          ]
+        },
+        {
+          "manager": "kubectl-client-side-apply",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        },
+        {
+          "manager": "kubectl-rollout",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
+            "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
+          ]
+        },
+        {
+          "manager": "kubectl-edit",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
+            "metadata.annotations.edited-by"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:49Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-replace",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:49Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.annotations.replaced-at"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2v-09",
+      "ns": "demo-compacted",
+      "argo": "",
+      "note": "kubectl patch deploy ranker --field-manager=migration-orchestrator --type merge -p '{\"metadata\":{\"annotations\":{\"migration/state\":\"done\"}}}'",
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "team": "search"
+      },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "migration/state": "done",
+        "owner": "ranking-oncall",
+        "replaced-at": "1794807409",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
+          ]
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": []
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ]
+        }
+      ],
+      "managers": [
+        {
+          "manager": "ancient-changes",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
+            "metadata.annotations",
+            "metadata.labels.app",
+            "spec.progressDeadlineSeconds",
+            "spec.replicas",
+            "spec.revisionHistoryLimit",
+            "spec.selector",
+            "spec.strategy.rollingUpdate.maxSurge",
+            "spec.strategy.rollingUpdate.maxUnavailable",
+            "spec.strategy.type",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
+            "spec.template.spec.dnsPolicy",
+            "spec.template.spec.restartPolicy",
+            "spec.template.spec.schedulerName",
+            "spec.template.spec.securityContext",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kubectl-annotate",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
+            "metadata.annotations.owner"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
+            "metadata.annotations.ticket"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
+        },
+        {
+          "manager": "kubectl-rollout",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
+            "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
+          ]
+        },
+        {
+          "manager": "kubectl-edit",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
+            "metadata.annotations.edited-by"
+          ]
+        },
+        {
+          "manager": "kubectl-replace",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:49Z",
+          "leaves": [
+            "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
+            "metadata.annotations.replaced-at"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T05:36:50Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "migration-orchestrator",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T05:36:50Z",
+          "leaves": [
+            "metadata.annotations.migration/state"
           ]
         }
       ]
@@ -629,12 +3009,27 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "migration/state": "done",
+        "owner": "ranking-oncall",
+        "replaced-at": "1794807409",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -646,48 +3041,20 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:58Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
             "metadata.annotations",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -698,6 +3065,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -709,9 +3099,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:10Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -719,9 +3108,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:12Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -729,9 +3117,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:13Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -739,22 +3126,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:14Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:16Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -762,9 +3145,8 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:19Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
             "metadata.annotations.edited-by"
           ]
         },
@@ -772,9 +3154,8 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:20Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:49Z",
+          "leaves": [
             "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
             "metadata.annotations.replaced-at"
           ]
@@ -783,9 +3164,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:21Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:50Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -811,9 +3191,8 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:21Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:50Z",
+          "leaves": [
             "metadata.annotations.migration/state"
           ]
         }
@@ -829,12 +3208,24 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "deployment.kubernetes.io/revision": "3",
+        "kubectl.kubernetes.io/last-applied-configuration": "{…}",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:35-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -846,18 +3237,20 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "kubectl",
           "operation": "Update",
           "subresource": "scale",
           "time": null,
-          "claims": {},
-          "other": [
+          "leaves": [
             "spec.replicas"
           ]
         },
@@ -865,39 +3258,8 @@ window.REPRO = {
           "manager": "kubectl-client-side-apply",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:56Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:23Z",
+          "leaves": [
             "metadata.annotations.kubectl.kubernetes.io/last-applied-configuration",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -907,6 +3269,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -918,9 +3303,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:02Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -928,9 +3312,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:04Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -938,9 +3321,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:05Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -948,22 +3330,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:06Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:07Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -971,9 +3349,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:09Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:37Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -1008,12 +3385,26 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "migration/state": "done",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -1025,43 +3416,38 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T05:24:28Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "ranker": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "retriever": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:57Z",
+          "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
             "spec.template.spec.terminationGracePeriodSeconds"
           ]
         },
@@ -1069,39 +3455,8 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:58Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
             "metadata.annotations",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -1112,6 +3467,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -1123,9 +3501,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:10Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -1133,9 +3510,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:12Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -1143,9 +3519,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:13Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -1153,22 +3528,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:14Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:16Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1176,9 +3547,8 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:19Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
             "metadata.annotations.edited-by"
           ]
         },
@@ -1186,9 +3556,8 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:21Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:50Z",
+          "leaves": [
             "metadata.annotations.migration/state"
           ]
         },
@@ -1196,9 +3565,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:28Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:57Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -1232,12 +3600,24 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-control:apps/Deployment:demo-control/ranker",
+        "deployment.kubernetes.io/revision": "3",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:35-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -1249,43 +3629,38 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T05:24:22Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "ranker": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "retriever": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:51Z",
+          "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
             "spec.template.spec.terminationGracePeriodSeconds"
           ]
         },
@@ -1294,8 +3669,7 @@ window.REPRO = {
           "operation": "Update",
           "subresource": "scale",
           "time": null,
-          "claims": {},
-          "other": [
+          "leaves": [
             "spec.replicas"
           ]
         },
@@ -1303,9 +3677,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:02Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -1313,9 +3686,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:04Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -1323,9 +3695,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:05Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -1333,22 +3704,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:06Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:07Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1356,9 +3723,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:22Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:51Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -1392,12 +3758,26 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "migration/state": "done",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -1409,43 +3789,38 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T05:24:28Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "ranker": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "retriever": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:57Z",
+          "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
             "spec.template.spec.terminationGracePeriodSeconds"
           ]
         },
@@ -1453,39 +3828,8 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:58Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
             "metadata.annotations",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -1496,6 +3840,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -1507,9 +3874,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:10Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -1517,9 +3883,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:12Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -1527,9 +3892,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:13Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -1537,22 +3901,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:14Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:16Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1560,9 +3920,8 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:19Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
             "metadata.annotations.edited-by"
           ]
         },
@@ -1570,9 +3929,8 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:21Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:50Z",
+          "leaves": [
             "metadata.annotations.migration/state"
           ]
         },
@@ -1580,9 +3938,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:28Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:57Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -1616,12 +3973,24 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-control:apps/Deployment:demo-control/ranker",
+        "deployment.kubernetes.io/revision": "3",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:35-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -1633,43 +4002,38 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T05:24:22Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "ranker": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "retriever": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:51Z",
+          "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
             "spec.template.spec.terminationGracePeriodSeconds"
           ]
         },
@@ -1678,8 +4042,7 @@ window.REPRO = {
           "operation": "Update",
           "subresource": "scale",
           "time": null,
-          "claims": {},
-          "other": [
+          "leaves": [
             "spec.replicas"
           ]
         },
@@ -1687,9 +4050,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:02Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -1697,9 +4059,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:04Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -1707,9 +4068,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:05Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -1717,22 +4077,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:06Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:07Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1740,9 +4096,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:22Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:51Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -1776,12 +4131,26 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
+        "deployment.kubernetes.io/revision": "3",
+        "edited-by": "kubectl-edit",
+        "migration/state": "done",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:44-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -1793,35 +4162,32 @@ window.REPRO = {
           "name": "feature-cache",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "CACHE_MODE=legacy"
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
           ]
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T05:24:28Z",
-          "claims": {
-            "ranker": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "retriever": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:57Z",
+          "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
             "spec.template.spec.terminationGracePeriodSeconds"
           ]
         },
@@ -1829,39 +4195,8 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:58Z",
-          "claims": {
-            "feature-cache": [
-              "env.{\"name\":\"CACHE_MODE\"}.name",
-              "env.{\"name\":\"CACHE_MODE\"}.value",
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
             "metadata.annotations",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -1872,6 +4207,29 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -1883,9 +4241,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:10Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:39Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -1893,9 +4250,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:12Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:40Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -1903,9 +4259,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:13Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:42Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -1913,22 +4268,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:14Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:16Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:45Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1936,9 +4287,8 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:19Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:48Z",
+          "leaves": [
             "metadata.annotations.edited-by"
           ]
         },
@@ -1946,9 +4296,8 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:21Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:50Z",
+          "leaves": [
             "metadata.annotations.migration/state"
           ]
         },
@@ -1956,9 +4305,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:28Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:57Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -1992,12 +4340,24 @@ window.REPRO = {
         "app": "ranker",
         "team": "search"
       },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-control:apps/Deployment:demo-control/ranker",
+        "deployment.kubernetes.io/revision": "4",
+        "owner": "ranking-oncall",
+        "ticket": "INC-1234"
+      },
+      "tplAnnotations": {
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T21:36:35-08:00"
+      },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
           "env": [
-            "LOG_LEVEL=debug"
+            {
+              "name": "LOG_LEVEL",
+              "value": "debug"
+            }
           ]
         },
         {
@@ -2006,31 +4366,25 @@ window.REPRO = {
           "env": []
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T05:24:36Z",
-          "claims": {
-            "ranker": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "retriever": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:37:05Z",
+          "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
             "spec.template.spec.terminationGracePeriodSeconds"
           ]
         },
@@ -2039,8 +4393,7 @@ window.REPRO = {
           "operation": "Update",
           "subresource": "scale",
           "time": null,
-          "claims": {},
-          "other": [
+          "leaves": [
             "spec.replicas"
           ]
         },
@@ -2048,9 +4401,8 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:02Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:30Z",
+          "leaves": [
             "metadata.labels.team"
           ]
         },
@@ -2058,9 +4410,8 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:04Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:31Z",
+          "leaves": [
             "metadata.annotations.owner"
           ]
         },
@@ -2068,9 +4419,8 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:05Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:33Z",
+          "leaves": [
             "metadata.annotations.ticket"
           ]
         },
@@ -2078,22 +4428,18 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:06Z",
-          "claims": {
-            "retriever": [
-              "env.{\"name\":\"LOG_LEVEL\"}.name",
-              "env.{\"name\":\"LOG_LEVEL\"}.value"
-            ]
-          },
-          "other": []
+          "time": "2026-11-16T05:36:34Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.env.{\"name\":\"LOG_LEVEL\"}.value"
+          ]
         },
         {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:07Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:36:35Z",
+          "leaves": [
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -2101,9 +4447,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:37Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:37:06Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
@@ -2136,6 +4481,11 @@ window.REPRO = {
       "labels": {
         "app": "ranker"
       },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
+        "deployment.kubernetes.io/revision": "4"
+      },
+      "tplAnnotations": {},
       "containers": [
         {
           "name": "retriever",
@@ -2148,31 +4498,25 @@ window.REPRO = {
           "env": []
         }
       ],
-      "managedFields": [
+      "managers": [
         {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T05:24:28Z",
-          "claims": {
-            "ranker": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ],
-            "retriever": [
-              "image",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:57Z",
+          "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
             "spec.template.spec.terminationGracePeriodSeconds"
           ]
         },
@@ -2180,28 +4524,8 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:23:58Z",
-          "claims": {
-            "ranker": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ],
-            "retriever": [
-              "image",
-              "imagePullPolicy",
-              "name",
-              "resources.requests.cpu",
-              "resources.requests.memory",
-              "terminationMessagePath",
-              "terminationMessagePolicy"
-            ]
-          },
-          "other": [
+          "time": "2026-11-16T05:36:26Z",
+          "leaves": [
             "metadata.annotations",
             "metadata.labels.app",
             "spec.progressDeadlineSeconds",
@@ -2211,6 +4535,20 @@ window.REPRO = {
             "spec.strategy.rollingUpdate.maxUnavailable",
             "spec.strategy.type",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.terminationMessagePolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.terminationMessagePolicy",
             "spec.template.spec.dnsPolicy",
             "spec.template.spec.restartPolicy",
             "spec.template.spec.schedulerName",
@@ -2222,9 +4560,8 @@ window.REPRO = {
           "manager": "argocd-application-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T05:24:52Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:37:20Z",
+          "leaves": [
             "spec.replicas"
           ]
         },
@@ -2232,9 +4569,8 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T05:24:52Z",
-          "claims": {},
-          "other": [
+          "time": "2026-11-16T05:37:21Z",
+          "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",

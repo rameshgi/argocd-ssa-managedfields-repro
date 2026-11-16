@@ -46,8 +46,19 @@ bootstrap() { # ns
   ok "${NS}: created via client-side apply; Update managers = $(update_manager_count "${NS}")"
 }
 
+# Human-readable form of a VERBS command, for the interactive page.
+pretty_cmd() { # mgr cmd
+  local c="$2"
+  c="${c//k -n \$NS /kubectl }"
+  c="${c//KUBE_EDITOR=${EDITOR_HELPER} /}"
+  c="${c//deploy_json \$NS/kubectl get deploy ${DEPLOY} -o json}"
+  c="${c//\'\$(date +%s)\'/<now>}"
+  [[ "$1" == kubectl-edit ]] && c="${c}   # editor adds annotation edited-by"
+  printf '%s' "${c}"
+}
+
 inflate() { # ns mode(control|compact)
-  local NS="$1" mode="$2" entry mgr cmd n
+  local NS="$1" mode="$2" entry mgr cmd n idx=0
   prev_mgrs=""; last_mgr=""
   for entry in "${VERBS[@]}"; do
     n="$(update_manager_count "${NS}")"
@@ -61,6 +72,8 @@ inflate() { # ns mode(control|compact)
     last_mgr="${mgr}"
     sleep 1.1   # managedFields timestamps have 1s resolution; keep ordering unambiguous
     eval "${cmd}" >/dev/null
+    idx=$((idx + 1))
+    snapshot "2v-$(printf %02d "${idx}")" "${NS}" "$(pretty_cmd "${mgr}" "${cmd}")"
     info "$(printf '%-24s -> Update managers: %2s   %s entry present: %s' \
       "${mgr}" "$(update_manager_count "${NS}")" "${CSA_MANAGER}" \
       "$(has_manager "${NS}" "${CSA_MANAGER}" Update && echo yes || echo NO)")"
@@ -70,8 +83,8 @@ inflate() { # ns mode(control|compact)
 step "Bootstrapping Deployments with client-side kubectl apply"
 bootstrap "${NS_CONTROL}"
 bootstrap "${NS_COMPACTED}"
-snapshot 1-csa-apply "${NS_COMPACTED}"
-snapshot 1-csa-apply "${NS_CONTROL}"
+snapshot 1-csa-apply "${NS_COMPACTED}" "kubectl apply -f manifests/v1/deployment.yaml   # client-side apply"
+snapshot 1-csa-apply "${NS_CONTROL}" "kubectl apply -f manifests/v1/deployment.yaml   # client-side apply"
 
 step "${NS_CONTROL}: adding field managers, staying under the cap"
 inflate "${NS_CONTROL}" control
