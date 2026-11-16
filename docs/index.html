@@ -171,7 +171,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
         <button data-ns="drift" aria-pressed="false">demo-drift (CPU limit)</button>
         <button data-ns="resync" aria-pressed="false">demo-resync (control)</button>
         <button data-ns="compacted" aria-pressed="false">demo-compacted (owner hidden)</button>
-        <button data-ns="put" aria-pressed="false">demo-put (PUT fix)</button>
+        <button data-ns="put" aria-pressed="false">demo-put (PUT)</button>
       </div>
       <span class="hint">← → step · c switch namespace · click a manager to highlight its fields</span>
       <div class="nav"><button id="prev" aria-label="Previous step">← Prev</button><span class="pos" id="pos"></span><button id="next" aria-label="Next step">Next →</button></div>
@@ -304,6 +304,20 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
       const compacted = merged.length > 0, n = updates(s).length;
       const actor = added.find(m => m.manager !== "ancient-changes" && m.manager !== "kube-controller-manager") || added[0];
       const sim = actor && !/^kubectl/.test(actor.manager);
+      if (!added.length && !merged.length) {
+        // The command added no managedFields entry (e.g. kubectl scale). Describe only what the data shows.
+        const verb = (s.note || "kubectl").split(/\s+/).slice(0, 2).join(" ");
+        const via = /^kubectl scale/.test(verb) ? " (via the /scale subresource)" : "";
+        const changed = prev && prev.replicas !== s.replicas ? `replicas ${prev.replicas} → ${s.replicas}` : "change applied";
+        Object.assign(st, { kind: "kubectl", phase: "Day-2 kubectl", cmd: s.note,
+          title: `${code(verb)}${esc(via)}: ${esc(changed)}, no new managedFields entry` });
+        st.stages = [
+          { t: "kubectl", v: `${verb}${via}`, d: `${esc(changed)}. It doesn't touch ${code("limits.cpu")}.` },
+          { t: "API server", v: "no new managedFields entry", d: `The Update manager count stays at ${n}.` },
+          { t: "Cap check · capmanagers.go", v: `${n} ≤ 10 → nothing happens`, c: n === 10 ? "warn" : "", d: `At most 10 Update entries are kept. <a href="${K8S}fieldmanager.go#L35">DefaultMaxUpdateManagers</a>` },
+        ];
+        return st;
+      }
       Object.assign(st, { kind: "kubectl", phase: "Day-2 kubectl", cmd: s.note, bad: compacted,
         title: compacted ? `${code(actor ? mlabel(actor) : "kubectl")} is Update manager #${n + merged.length - 1}: the API server <b>compacts managedFields</b>`
                          : `${code(actor ? mlabel(actor) : "kubectl")} becomes Update manager #${n}` });

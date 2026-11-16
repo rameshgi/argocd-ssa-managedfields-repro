@@ -128,8 +128,8 @@ because the apply changed nothing." \
 
 step_md 5 "The same outcome after managedFields compaction: the owner is anonymous" "$(snap 5-argo-sync-v2 "$Cm")" field none \
 "In \`${Cm}\`, routine day-2 operations pushed the object past 10 \`Update\` managers before Git changed. The operations
-are \`kubectl label\`, \`annotate\`, \`patch\`, \`rollout restart\`, \`scale\`, \`edit\` and \`replace\`, plus simulated
-controllers. Names such as \`hpa-controller\` and \`migration-orchestrator\` are set by the script with \`--field-manager\`.
+are \`kubectl label\`, \`annotate\`, \`patch\`, \`rollout restart\`, \`edit\` and \`replace\`, plus simulated
+controllers. A \`kubectl scale\` (replicas 1 → 2) also ran but added no \`managedFields\` entry. Names such as \`hpa-controller\` and \`migration-orchestrator\` are set by the script with \`--field-manager\`.
 The API server merged the oldest entries, including \`kubectl-set\`, into **\`ancient-changes\`**. The result is the same
 silent drift, but nothing in the object records who set the value or when."
 
