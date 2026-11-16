@@ -13,14 +13,14 @@ with server-side apply:
 > they appear to be owned externally.
 
 The post attributes the loss to compaction. This test bed shows that ownership moves earlier, when
-kubectl changes the value. Compaction then hides who owns the field, which is what made the
+kubectl changes the field or re-creates the container. Compaction then hides who owns the field, which is what made the
 production case hard to diagnose. The post itself notes that this "is not an Argo CD issue per se".
 The test bed reproduces the mechanism behind that symptom, end to end, on a local
 [kind](https://kind.sigs.k8s.io/) cluster, for both a single field and a whole container.
 
-**The danger: Argo CD's diff hides the drift.** After the kubectl change, the object no longer
-matches Git once Git deletes what was changed. Argo CD still reports `Synced/Healthy`, before and
-after syncing, and nothing in its UI or status shows the difference.
+**The danger: Argo CD's diff hides the drift.** Once Git deletes something kubectl changed, the live
+object no longer matches Git, and Argo CD still reports `Synced/Healthy` both before and after the
+sync. Nothing in its UI or status shows the difference.
 
 **Interactive walkthrough:** <https://rameshgi.github.io/argocd-ssa-managedfields-repro/> (source:
 [`docs/index.html`](docs/index.html)). Click through the timeline one change at a time. Three panels
@@ -28,14 +28,14 @@ show the manifest in Git, the object in the cluster, and the field managers with
 one owns. For Argo CD steps, a strip shows how Argo CD builds the desired state and applies it. Every
 value comes from the captured run.
 
-**Result** (output of `scripts/verify.sh`, after Argo CD synced v2 everywhere):
+**Result** (summarised from `scripts/verify.sh`, after Argo CD synced v2 everywhere):
 
 | Namespace | Deleted in Git | Still live | Argo CD | Owner in `managedFields` | Verdict |
 |---|---|---|---|---|---|
 | `demo-drift` | `retriever` `limits.cpu` | `2` | Synced/Healthy | `kubectl-set` (Update) | ✘ silent drift |
 | `demo-resync` (control) | `retriever` `limits.cpu` | — | Synced/Healthy | — | ✔ removed |
-| `demo-compacted` | `retriever` `limits.cpu` | `2` | Synced/Healthy | `ancient-changes` (Update) | ✘ silent drift, owner hidden |
-| `demo-put` | `retriever` `limits.cpu` | `2` | Synced/Healthy | `kubectl-set` (Update) | ✘ silent drift (fixed by the PUT in step 08) |
+| `demo-compacted` | `retriever` `limits.cpu` | `2` | Synced/Healthy | `ancient-changes` (Update) | ✘ silent drift, owner hidden (later removed by the PUT in step 08) |
+| `demo-put` | `retriever` `limits.cpu` | `2` | Synced/Healthy | `kubectl-set` (Update) | ✘ silent drift (later removed by the PUT in step 08) |
 | `demo-container` | container `feature-cache` | running | Synced/Healthy | `kubectl-patch` (Update) | ✘ silent drift |
 
 | Component | Version |
@@ -71,7 +71,7 @@ Prerequisites: `docker` (Docker Desktop, OrbStack or colima), `kind`, `kubectl`,
 | Command | What it does |
 |---|---|
 | `make repro` | `scripts/run-all.sh`: cluster, Argo CD, all scenarios, verdict, PUT contrast, timeline (~5 min) |
-| `make verify` | print the verdict again |
+| `make verify` | print the verdict of the server-side-apply sync again. For `demo-compacted` and `demo-put`, which step 08 later cleans with a PUT, it reads the state recorded right after that sync and notes the current state, so the verdict matches `make repro` |
 | `make timeline` | regenerate the README timeline and `docs/snapshots.js` from the last run |
 | `make down` | delete the kind cluster and `.work/` |
 
@@ -116,7 +116,7 @@ by `scripts/render-timeline.sh`. Expand a step to see what Git says, what is liv
 Argo CD syncs `manifests/v1` with `ServerSideApply=true`. `argocd-controller` (operation `Apply`) owns every field in
 the manifest, including `retriever`'s `limits.cpu`.
 
-Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:18`, options `ServerSideApply=true`.
+Last sync operation: revision `20c2f4bf`, Succeeded, finished `07:05:34`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner in `managedFields` |
 |---|---|---|---|
@@ -126,8 +126,8 @@ Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:18`, option
 
 | manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 06:46:18 | **yes** | 23 |
-| kube-controller-manager | Update (`status`) | 06:46:19 | — | 19 |
+| **argocd-controller** | Apply | 07:05:34 | **yes** | 23 |
+| kube-controller-manager | Update (`status`) | 07:05:34 | — | 19 |
 
 </details>
 
@@ -146,9 +146,9 @@ to `kubectl-set`. `argocd-controller` no longer owns it. Argo CD correctly repor
 
 | manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:18 | — | 22 |
-| kube-controller-manager | Update (`status`) | 06:46:42 | — | 20 |
-| **kubectl-set** | Update | 06:46:42 | **yes** | 1 |
+| argocd-controller | Apply | 07:05:34 | — | 22 |
+| kube-controller-manager | Update (`status`) | 07:05:59 | — | 20 |
+| **kubectl-set** | Update | 07:05:59 | **yes** | 1 |
 
 </details>
 
@@ -168,9 +168,9 @@ and the app goes from **OutOfSync to Synced**, although nothing in the cluster c
 
 | manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:18 | — | 22 |
-| kube-controller-manager | Update (`status`) | 06:46:42 | — | 19 |
-| **kubectl-set** | Update | 06:46:42 | **yes** | 1 |
+| argocd-controller | Apply | 07:05:34 | — | 22 |
+| **kubectl-set** | Update | 07:05:59 | **yes** | 1 |
+| kube-controller-manager | Update (`status`) | 07:06:00 | — | 19 |
 
 <details><summary>Same moment in <code>demo-resync</code> (Argo CD: <code>OutOfSync/Healthy</code>)</summary>
 
@@ -183,8 +183,8 @@ owner `argocd-controller`). The dry run therefore predicts the field is removed,
 
 | manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 06:46:50 | **yes** | 23 |
-| kube-controller-manager | Update (`status`) | 06:46:50 | — | 19 |
+| **argocd-controller** | Apply | 07:06:03 | **yes** | 23 |
+| kube-controller-manager | Update (`status`) | 07:06:03 | — | 19 |
 
 </details>
 
@@ -199,7 +199,7 @@ the applier owns it, and `kubectl-set` owns `limits.cpu`. The sync **Succeeds**,
 `retriever` keeps a 2-core CPU limit that exists nowhere in Git. `argocd-controller`'s timestamp doesn't move,
 because the apply changed nothing.
 
-Last sync operation: revision `92d51298`, Succeeded, finished `06:47:12`, options `ServerSideApply=true`.
+Last sync operation: revision `72f32706`, Succeeded, finished `07:06:32`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner in `managedFields` |
 |---|---|---|---|
@@ -209,9 +209,9 @@ Last sync operation: revision `92d51298`, Succeeded, finished `06:47:12`, option
 
 | manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:18 | — | 22 |
-| kube-controller-manager | Update (`status`) | 06:46:42 | — | 19 |
-| **kubectl-set** | Update | 06:46:42 | **yes** | 1 |
+| argocd-controller | Apply | 07:05:34 | — | 22 |
+| **kubectl-set** | Update | 07:05:59 | **yes** | 1 |
+| kube-controller-manager | Update (`status`) | 07:06:00 | — | 19 |
 
 <details><summary>Same moment in <code>demo-resync</code> (Argo CD: <code>Synced/Healthy</code>)</summary>
 
@@ -223,8 +223,8 @@ Last sync operation: revision `92d51298`, Succeeded, finished `06:47:12`, option
 
 | manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:47:18 | — | 22 |
-| kube-controller-manager | Update (`status`) | 06:47:18 | — | 19 |
+| argocd-controller | Apply | 07:06:38 | — | 22 |
+| kube-controller-manager | Update (`status`) | 07:06:38 | — | 19 |
 
 </details>
 
@@ -239,7 +239,7 @@ controllers. Names such as `hpa-controller` and `migration-orchestrator` are set
 The API server merged the oldest entries, including `kubectl-set`, into **`ancient-changes`**. The result is the same
 silent drift, but nothing in the object records who set the value or when.
 
-Last sync operation: revision `92d51298`, Succeeded, finished `06:47:23`, options `ServerSideApply=true`.
+Last sync operation: revision `72f32706`, Succeeded, finished `07:06:43`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner in `managedFields` |
 |---|---|---|---|
@@ -249,17 +249,17 @@ Last sync operation: revision `92d51298`, Succeeded, finished `06:47:23`, option
 
 | manager | operation | time | owns `limits.cpu` | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:28 | — | 22 |
-| **ancient-changes** | Update | 06:46:54 | **yes** | 2 |
-| kubectl-annotate | Update | 06:46:55 | — | 1 |
-| kubectl-patch | Update | 06:46:56 | — | 1 |
-| kubectl-rollout | Update | 06:46:58 | — | 1 |
-| kubectl-edit | Update | 06:47:01 | — | 1 |
-| kubectl-replace | Update | 06:47:02 | — | 1 |
-| hpa-controller | Update | 06:47:03 | — | 1 |
-| kube-controller-manager | Update (`status`) | 06:47:05 | — | 19 |
-| migration-orchestrator | Update | 06:47:05 | — | 1 |
-| cost-attribution-bot | Update | 06:47:06 | — | 1 |
+| argocd-controller | Apply | 07:05:43 | — | 22 |
+| **ancient-changes** | Update | 07:06:07 | **yes** | 2 |
+| kubectl-annotate | Update | 07:06:08 | — | 1 |
+| kubectl-patch | Update | 07:06:10 | — | 1 |
+| kubectl-rollout | Update | 07:06:11 | — | 1 |
+| kubectl-edit | Update | 07:06:14 | — | 1 |
+| kubectl-replace | Update | 07:06:15 | — | 1 |
+| hpa-controller | Update | 07:06:17 | — | 1 |
+| kube-controller-manager | Update (`status`) | 07:06:18 | — | 19 |
+| migration-orchestrator | Update | 07:06:18 | — | 1 |
+| cost-attribution-bot | Update | 07:06:20 | — | 1 |
 
 </details>
 
@@ -294,7 +294,7 @@ Last sync operation: revision `92d51298`, Succeeded, finished `06:47:23`, option
 Argo CD creates the Deployment from `apps/ranker-container`, which has three containers. `argocd-controller` owns the
 `feature-cache` list item (`.` and `f:name`).
 
-Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, options `ServerSideApply=true`.
+Last sync operation: revision `20c2f4bf`, Succeeded, finished `07:05:52`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner of the list item (`.`) |
 |---|---|---|---|
@@ -304,18 +304,18 @@ Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, option
 
 | manager | operation | time | owns `feature-cache` item | fields owned |
 |---|---|---|---|---|
-| **argocd-controller** | Apply | 06:46:37 | **yes** | 23 |
-| kube-controller-manager | Update (`status`) | 06:46:38 | — | 19 |
+| **argocd-controller** | Apply | 07:05:52 | **yes** | 23 |
+| kube-controller-manager | Update (`status`) | 07:05:53 | — | 19 |
 
 </details>
 
 <details>
-<summary><b>Step C2 · Incident: on-call removes the crash-looping container</b> — Argo CD: <code>OutOfSync/Healthy</code> · live <code>feature-cache: none</code></summary>
+<summary><b>Step C2 · Incident: on-call removes the crash-looping container</b> — Argo CD: <code>OutOfSync/Progressing</code> · live <code>feature-cache: none</code></summary>
 
 `kubectl patch --type json` removes `feature-cache`. The list item and `argocd-controller`'s ownership of it are gone.
 Argo CD reports **OutOfSync**.
 
-Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, options `ServerSideApply=true`.
+Last sync operation: revision `20c2f4bf`, Succeeded, finished `07:05:52`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner of the list item (`.`) |
 |---|---|---|---|
@@ -325,18 +325,18 @@ Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, option
 
 | manager | operation | time | owns `feature-cache` item | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:37 | — | 17 |
-| kube-controller-manager | Update (`status`) | 06:46:44 | — | 19 |
+| argocd-controller | Apply | 07:05:52 | — | 17 |
+| kube-controller-manager | Update (`status`) | 07:06:01 | — | 20 |
 
 </details>
 
 <details>
-<summary><b>Step C3 · …and adds it back</b> — Argo CD: <code>Synced/Healthy</code> · live <code>feature-cache: running</code></summary>
+<summary><b>Step C3 · After the fix, on-call adds the container back</b> — Argo CD: <code>Synced/Progressing</code> · live <code>feature-cache: running</code></summary>
 
-A second `kubectl patch` adds `feature-cache` back with the same spec as Git. It is a *new* list item, owned by
+After the fix is rolled out, on-call restores `feature-cache` with a second `kubectl patch`, using the same spec as Git. It is a *new* list item, owned by
 `kubectl-patch`. The spec matches Git, so Argo CD reports **Synced**. `argocd-controller` owns nothing in it.
 
-Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, options `ServerSideApply=true`.
+Last sync operation: revision `20c2f4bf`, Succeeded, finished `07:05:52`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner of the list item (`.`) |
 |---|---|---|---|
@@ -346,9 +346,9 @@ Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, option
 
 | manager | operation | time | owns `feature-cache` item | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:37 | — | 17 |
-| **kubectl-patch** | Update | 06:46:47 | **yes** | 9 |
-| kube-controller-manager | Update (`status`) | 06:46:48 | — | 19 |
+| argocd-controller | Apply | 07:05:52 | — | 17 |
+| kube-controller-manager | Update (`status`) | 07:06:02 | — | 20 |
+| **kubectl-patch** | Update | 07:06:02 | **yes** | 9 |
 
 </details>
 
@@ -358,7 +358,7 @@ Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, option
 The commit deletes `feature-cache` from `apps/ranker-container`. The dry-run server-side apply keeps the container, because
 `argocd-controller` doesn't own it, so the app stays **Synced**.
 
-Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, options `ServerSideApply=true`.
+Last sync operation: revision `20c2f4bf`, Succeeded, finished `07:05:52`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner of the list item (`.`) |
 |---|---|---|---|
@@ -368,9 +368,9 @@ Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, option
 
 | manager | operation | time | owns `feature-cache` item | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:37 | — | 17 |
-| **kubectl-patch** | Update | 06:46:47 | **yes** | 9 |
-| kube-controller-manager | Update (`status`) | 06:46:48 | — | 19 |
+| argocd-controller | Apply | 07:05:52 | — | 17 |
+| **kubectl-patch** | Update | 07:06:02 | **yes** | 9 |
+| kube-controller-manager | Update (`status`) | 07:06:03 | — | 19 |
 
 </details>
 
@@ -380,7 +380,7 @@ Last sync operation: revision `5cf19d07`, Succeeded, finished `06:46:37`, option
 The server-side-apply PATCH can't delete a list item another manager owns. The sync **Succeeds**, the app is
 **Synced/Healthy**, and a container Git no longer has keeps running.
 
-Last sync operation: revision `92d51298`, Succeeded, finished `06:47:35`, options `ServerSideApply=true`.
+Last sync operation: revision `72f32706`, Succeeded, finished `07:06:57`, options `ServerSideApply=true`.
 
 | | Git | Live | Owner of the list item (`.`) |
 |---|---|---|---|
@@ -390,9 +390,9 @@ Last sync operation: revision `92d51298`, Succeeded, finished `06:47:35`, option
 
 | manager | operation | time | owns `feature-cache` item | fields owned |
 |---|---|---|---|---|
-| argocd-controller | Apply | 06:46:37 | — | 17 |
-| **kubectl-patch** | Update | 06:46:47 | **yes** | 9 |
-| kube-controller-manager | Update (`status`) | 06:46:48 | — | 19 |
+| argocd-controller | Apply | 07:05:52 | — | 17 |
+| **kubectl-patch** | Update | 07:06:02 | **yes** | 9 |
+| kube-controller-manager | Update (`status`) | 07:06:03 | — | 19 |
 
 </details>
 
@@ -465,15 +465,35 @@ Together they make a PUT safe and visible as the way to sync.
 
 ### 2. Alternative: detect and report the drift
 
-A smaller change that leaves sync semantics alone. During comparison, Argo CD flags any field or list
-item that meets all three conditions:
-- it was in the manifest of the last synced revision (from `status.history`);
-- it is absent from the current desired state;
-- it is still live and owned by a manager other than `argocd-controller` (from `managedFields`).
+A smaller change that leaves sync semantics alone. During comparison, Argo CD flags a field or list
+item when all of the following hold:
 
-Argo CD then reports it, as `OutOfSync` with a reason or as an application condition. In this test
-bed that would turn step 3 and step C4 of the timeline from `Synced` into a visible warning, with the
-owning manager named (or `ancient-changes`, after compaction).
+| Condition | Where Argo CD gets it |
+|---|---|
+| it was in the manifest Argo CD last synced | `status.history` stores only revisions, not manifests. Argo CD would either re-render the last synced revision, or store the set of field paths it last applied. |
+| it is absent from the current desired state | the rendered manifest, as today |
+| it is still live and owned by a manager other than `argocd-controller` | `managedFields` on the live object |
+| its path is **not** listed in `ignoreDifferences` | the Application spec |
+
+| Source of "last synced manifest" | Cost |
+|---|---|
+| re-render the last synced revision | one extra manifest generation per comparison. Revisions are immutable, so the result can be cached by revision, the same way current manifests are. |
+| store the field set Argo CD last applied | no extra rendering, but more data in the Application status (or a separate object), growing with the size of the app |
+
+**Reported as a non-blocking application condition, not `OutOfSync`.** Removing a field from Git can be
+an intentional hand-off. Argo CD's own docs recommend it in
+[Leaving Room For Imperativeness](https://argo-cd.readthedocs.io/en/stable/user-guide/best_practices/#leaving-room-for-imperativeness):
+delete `spec.replicas` from Git so that an HPA owns it. Right after that commit, `spec.replicas` meets
+the first three conditions: it was synced before, it is no longer in Git, and the HPA (via
+`kube-controller-manager`) owns it.
+- If the path is listed in `ignoreDifferences`, the fourth condition excludes it.
+- If it isn't, a condition that names the field and its owner (`spec.replicas` owned by
+  `kube-controller-manager`) is easy to recognise as expected and doesn't break anything.
+- `OutOfSync` would be wrong in that case. It would make auto-sync retry a sync that can't change the
+  outcome, and mark a correct hand-off as drift.
+
+In this test bed, the condition would appear at step 3 and step C4 of the timeline. It would name the
+owning manager (or `ancient-changes`, after compaction).
 
 ## License
 

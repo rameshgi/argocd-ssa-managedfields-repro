@@ -155,8 +155,8 @@ step_md C2 "Incident: on-call removes the crash-looping container" "$(snap 2a-re
 "\`kubectl patch --type json\` removes \`${SIDECAR}\`. The list item and \`${ARGO_MANAGER}\`'s ownership of it are gone.
 Argo CD reports **OutOfSync**."
 
-step_md C3 "…and adds it back" "$(snap 2b-readd "$Ct")" container running \
-"A second \`kubectl patch\` adds \`${SIDECAR}\` back with the same spec as Git. It is a *new* list item, owned by
+step_md C3 "After the fix, on-call adds the container back" "$(snap 2b-readd "$Ct")" container running \
+"After the fix is rolled out, on-call restores \`${SIDECAR}\` with a second \`kubectl patch\`, using the same spec as Git. It is a *new* list item, owned by
 \`kubectl-patch\`. The spec matches Git, so Argo CD reports **Synced**. \`${ARGO_MANAGER}\` owns nothing in it."
 
 step_md C4 "Git deletes the container, and Argo CD stays Synced" "$(snap 4-git-v2 "$Ct")" container none \

@@ -272,9 +272,9 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
       ];
     } else if (id === "2b-readd") {
       Object.assign(st, { kind: "kubectl", phase: "Incident", cmd: s.note, bad: true,
-        title: `…and adds ${code(SC)} back: a new list item, owned by kubectl` });
+        title: `After the fix, on-call adds ${code(SC)} back: a new list item, owned by kubectl` });
       st.stages = [
-        { t: "kubectl", v: "Update: container added", d: "Same spec as Git." },
+        { t: "kubectl", v: "Update: container added", d: "After the fix is rolled out, on-call restores it with a second kubectl patch, using the same spec as Git." },
         { t: "API server", v: `item owned by ${ownStr(s, key)}`, c: "bad", d: `Whoever creates a list item owns it. ${code(AM)} owns nothing in it.` },
         { t: "Argo CD compare", v: s.argo || "?", c: "warn", d: "The spec matches Git, so there is nothing to report yet." },
       ];

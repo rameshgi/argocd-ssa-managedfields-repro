@@ -24,9 +24,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -93,7 +93,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -128,7 +128,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:44Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -162,9 +162,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:37Z",
+        "finishedAt": "2026-11-16T07:05:52Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -231,7 +231,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:37Z",
+          "time": "2026-11-16T07:05:52Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -266,7 +266,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:38Z",
+          "time": "2026-11-16T07:05:53Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -300,9 +300,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:18Z",
+        "finishedAt": "2026-11-16T07:05:34Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -369,7 +369,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:18Z",
+          "time": "2026-11-16T07:05:34Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -404,7 +404,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:19Z",
+          "time": "2026-11-16T07:05:34Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -438,9 +438,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:32Z",
+        "finishedAt": "2026-11-16T07:05:48Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -507,7 +507,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:32Z",
+          "time": "2026-11-16T07:05:48Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -542,7 +542,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:33Z",
+          "time": "2026-11-16T07:05:48Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -576,9 +576,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:23Z",
+        "finishedAt": "2026-11-16T07:05:38Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -645,7 +645,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:23Z",
+          "time": "2026-11-16T07:05:38Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -680,7 +680,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:24Z",
+          "time": "2026-11-16T07:05:39Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -714,9 +714,9 @@ window.REPRO = {
       "argo": "OutOfSync/Progressing",
       "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -783,7 +783,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -817,7 +817,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -848,7 +848,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -861,9 +861,9 @@ window.REPRO = {
       "argo": "OutOfSync/Progressing",
       "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:18Z",
+        "finishedAt": "2026-11-16T07:05:34Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -930,7 +930,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:18Z",
+          "time": "2026-11-16T07:05:34Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -964,7 +964,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:42Z",
+          "time": "2026-11-16T07:05:59Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -995,7 +995,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:42Z",
+          "time": "2026-11-16T07:05:59Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1008,9 +1008,9 @@ window.REPRO = {
       "argo": "OutOfSync/Progressing",
       "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:32Z",
+        "finishedAt": "2026-11-16T07:05:48Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -1077,7 +1077,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:32Z",
+          "time": "2026-11-16T07:05:48Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -1111,7 +1111,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -1142,7 +1142,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1155,9 +1155,9 @@ window.REPRO = {
       "argo": "OutOfSync/Progressing",
       "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:23Z",
+        "finishedAt": "2026-11-16T07:05:38Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -1224,7 +1224,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:23Z",
+          "time": "2026-11-16T07:05:38Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -1258,7 +1258,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:42Z",
+          "time": "2026-11-16T07:05:59Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -1289,7 +1289,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:42Z",
+          "time": "2026-11-16T07:05:59Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1299,12 +1299,12 @@ window.REPRO = {
     {
       "step": "2a-remove",
       "ns": "demo-container",
-      "argo": "OutOfSync/Healthy",
+      "argo": "OutOfSync/Progressing",
       "note": "kubectl patch deploy ranker --type json -p '[{\"op\":\"remove\",\"path\":\"/spec/template/spec/containers/2\"}]'",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:37Z",
+        "finishedAt": "2026-11-16T07:05:52Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -1355,7 +1355,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:37Z",
+          "time": "2026-11-16T07:05:52Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -1382,7 +1382,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:44Z",
+          "time": "2026-11-16T07:06:01Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -1405,6 +1405,7 @@ window.REPRO = {
             "status.readyReplicas",
             "status.replicas",
             "status.terminatingReplicas",
+            "status.unavailableReplicas",
             "status.updatedReplicas"
           ]
         }
@@ -1413,12 +1414,12 @@ window.REPRO = {
     {
       "step": "2b-readd",
       "ns": "demo-container",
-      "argo": "Synced/Healthy",
+      "argo": "Synced/Progressing",
       "note": "kubectl patch deploy ranker --type json -p '[{\"op\":\"add\",\"path\":\"/spec/template/spec/containers/-\",\"value\":{\"name\":\"feature-cache\",…same spec as Git…}}]'",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:37Z",
+        "finishedAt": "2026-11-16T07:05:52Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -1485,7 +1486,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:37Z",
+          "time": "2026-11-16T07:05:52Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -1509,32 +1510,10 @@ window.REPRO = {
           ]
         },
         {
-          "manager": "kubectl-patch",
-          "operation": "Update",
-          "subresource": null,
-          "time": "2026-11-16T06:46:47Z",
-          "leaves": [
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env..",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources..",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests..",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
-            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy"
-          ]
-        },
-        {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:48Z",
+          "time": "2026-11-16T07:06:02Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -1557,7 +1536,30 @@ window.REPRO = {
             "status.readyReplicas",
             "status.replicas",
             "status.terminatingReplicas",
+            "status.unavailableReplicas",
             "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T07:06:02Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy"
           ]
         }
       ]
@@ -1568,9 +1570,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl label deploy ranker team=search; kubectl label … cost-center=ml-42; kubectl scale … --replicas=2",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:32Z",
+        "finishedAt": "2026-11-16T07:05:48Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -1639,7 +1641,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:32Z",
+          "time": "2026-11-16T07:05:48Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -1673,7 +1675,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1682,7 +1684,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -1691,7 +1693,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -1722,7 +1724,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -1735,9 +1737,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 again (server-side apply, force-conflicts)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:50Z",
+        "finishedAt": "2026-11-16T07:06:03Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -1804,7 +1806,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:50Z",
+          "time": "2026-11-16T07:06:03Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -1839,7 +1841,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:50Z",
+          "time": "2026-11-16T07:06:03Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -1873,9 +1875,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl label deploy ranker team=search --overwrite",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -1943,7 +1945,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -1974,10 +1976,19 @@ window.REPRO = {
           ]
         },
         {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T07:06:00Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        },
+        {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:01Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -2004,19 +2015,10 @@ window.REPRO = {
           ]
         },
         {
-          "manager": "kubectl-set",
-          "operation": "Update",
-          "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
-          "leaves": [
-            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
-          ]
-        },
-        {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -2029,9 +2031,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl annotate deploy ranker owner=ranking-oncall --overwrite",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -2100,7 +2102,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -2134,7 +2136,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -2143,7 +2145,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -2152,7 +2154,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -2182,7 +2184,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2195,9 +2197,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl patch deploy ranker --type merge -p '{\"metadata\":{\"annotations\":{\"ticket\":\"INC-1234\"}}}'",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -2267,7 +2269,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -2301,7 +2303,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -2310,7 +2312,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -2319,7 +2321,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2328,7 +2330,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -2358,7 +2360,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2371,9 +2373,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl rollout restart deploy/ranker",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -2390,7 +2392,7 @@ window.REPRO = {
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -2445,7 +2447,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -2479,7 +2481,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -2488,7 +2490,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -2497,7 +2499,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2506,7 +2508,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2515,7 +2517,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -2546,7 +2548,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -2560,9 +2562,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl scale deploy/ranker --replicas=2",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -2579,7 +2581,7 @@ window.REPRO = {
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -2634,7 +2636,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -2668,7 +2670,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -2677,7 +2679,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -2686,7 +2688,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2695,7 +2697,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2704,7 +2706,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -2714,7 +2716,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:59Z",
+          "time": "2026-11-16T07:06:13Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -2749,9 +2751,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl edit deploy/ranker -o json   # editor adds annotation edited-by",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -2769,7 +2771,7 @@ window.REPRO = {
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -2824,7 +2826,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -2858,7 +2860,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -2867,7 +2869,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -2876,7 +2878,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2885,7 +2887,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2894,7 +2896,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -2904,7 +2906,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -2934,7 +2936,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -2947,9 +2949,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl get deploy ranker -o json | jq '.metadata.annotations.\"replaced-at\"=\"<now>\"' | kubectl replace -f -",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -2964,11 +2966,11 @@ window.REPRO = {
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "owner": "ranking-oncall",
-        "replaced-at": "1794811622",
+        "replaced-at": "1794812775",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -3023,7 +3025,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -3057,7 +3059,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -3066,7 +3068,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -3075,7 +3077,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -3084,7 +3086,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -3093,7 +3095,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -3103,7 +3105,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -3112,7 +3114,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:02Z",
+          "time": "2026-11-16T07:06:15Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -3142,7 +3144,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:02Z",
+          "time": "2026-11-16T07:06:15Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -3155,9 +3157,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl annotate deploy ranker --field-manager=hpa-controller autoscaling/last-scale=<now> --overwrite   # simulated manager name",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -3169,15 +3171,15 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794811623",
+        "autoscaling/last-scale": "1794812777",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "owner": "ranking-oncall",
-        "replaced-at": "1794811622",
+        "replaced-at": "1794812775",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -3232,7 +3234,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -3266,7 +3268,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -3275,7 +3277,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -3284,7 +3286,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -3293,7 +3295,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -3302,7 +3304,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -3312,7 +3314,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -3321,7 +3323,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:02Z",
+          "time": "2026-11-16T07:06:15Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -3330,7 +3332,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:03Z",
+          "time": "2026-11-16T07:06:17Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -3339,7 +3341,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:03Z",
+          "time": "2026-11-16T07:06:17Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -3373,9 +3375,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl patch deploy ranker --field-manager=migration-orchestrator --type merge -p '{\"metadata\":{\"annotations\":{\"migration/state\":\"done\"}}}'   # simulated manager name",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -3387,16 +3389,16 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794811623",
+        "autoscaling/last-scale": "1794812777",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794811622",
+        "replaced-at": "1794812775",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -3451,7 +3453,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -3485,7 +3487,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -3494,7 +3496,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -3503,7 +3505,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -3512,7 +3514,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -3521,7 +3523,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -3531,7 +3533,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -3540,7 +3542,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:02Z",
+          "time": "2026-11-16T07:06:15Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -3549,7 +3551,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:03Z",
+          "time": "2026-11-16T07:06:17Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -3558,7 +3560,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -3588,7 +3590,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -3601,9 +3603,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "kubectl label deploy ranker --field-manager=cost-attribution-bot cost-center=ml-42 --overwrite   # simulated manager name",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -3616,16 +3618,16 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794811623",
+        "autoscaling/last-scale": "1794812777",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794811622",
+        "replaced-at": "1794812775",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -3680,7 +3682,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -3714,7 +3716,7 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
@@ -3724,7 +3726,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -3733,7 +3735,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -3742,7 +3744,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -3752,7 +3754,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -3761,7 +3763,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:02Z",
+          "time": "2026-11-16T07:06:15Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -3770,7 +3772,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:03Z",
+          "time": "2026-11-16T07:06:17Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -3779,7 +3781,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -3809,7 +3811,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -3818,7 +3820,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:06Z",
+          "time": "2026-11-16T07:06:20Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -3831,9 +3833,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "git commit: delete retriever's CPU limit (manifests/v2)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:28Z",
+        "finishedAt": "2026-11-16T07:05:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -3846,16 +3848,16 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794811623",
+        "autoscaling/last-scale": "1794812777",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794811622",
+        "replaced-at": "1794812775",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -3910,7 +3912,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -3944,7 +3946,7 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
@@ -3954,7 +3956,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -3963,7 +3965,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -3972,7 +3974,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -3982,7 +3984,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -3991,7 +3993,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:02Z",
+          "time": "2026-11-16T07:06:15Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -4000,7 +4002,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:03Z",
+          "time": "2026-11-16T07:06:17Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -4009,7 +4011,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -4039,7 +4041,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -4048,7 +4050,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:06Z",
+          "time": "2026-11-16T07:06:20Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -4061,9 +4063,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "git commit: delete the feature-cache container (manifests/v2-container)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:37Z",
+        "finishedAt": "2026-11-16T07:05:52Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -4130,7 +4132,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:37Z",
+          "time": "2026-11-16T07:05:52Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -4157,7 +4159,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:47Z",
+          "time": "2026-11-16T07:06:02Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
             "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env..",
@@ -4179,7 +4181,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:48Z",
+          "time": "2026-11-16T07:06:03Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -4213,9 +4215,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "git commit: delete retriever's CPU limit (manifests/v2)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:18Z",
+        "finishedAt": "2026-11-16T07:05:34Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -4282,7 +4284,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:18Z",
+          "time": "2026-11-16T07:05:34Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -4313,10 +4315,19 @@ window.REPRO = {
           ]
         },
         {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T07:05:59Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        },
+        {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:42Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -4341,15 +4352,6 @@ window.REPRO = {
             "status.terminatingReplicas",
             "status.updatedReplicas"
           ]
-        },
-        {
-          "manager": "kubectl-set",
-          "operation": "Update",
-          "subresource": null,
-          "time": "2026-11-16T06:46:42Z",
-          "leaves": [
-            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
-          ]
         }
       ]
     },
@@ -4359,9 +4361,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "git commit: delete retriever's CPU limit (manifests/v2)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:32Z",
+        "finishedAt": "2026-11-16T07:05:48Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -4430,7 +4432,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:32Z",
+          "time": "2026-11-16T07:05:48Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -4464,7 +4466,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -4473,7 +4475,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -4482,7 +4484,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -4491,7 +4493,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:53Z",
+          "time": "2026-11-16T07:06:06Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -4525,9 +4527,9 @@ window.REPRO = {
       "argo": "OutOfSync/Healthy",
       "note": "git commit: delete retriever's CPU limit (manifests/v2)",
       "sync": {
-        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "revision": "20c2f4bf10dca28cde9e1e7c81f06ed7af667915",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:46:50Z",
+        "finishedAt": "2026-11-16T07:06:03Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -4594,7 +4596,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:50Z",
+          "time": "2026-11-16T07:06:03Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -4629,7 +4631,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:50Z",
+          "time": "2026-11-16T07:06:03Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -4663,9 +4665,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of v2 (server-side apply)",
       "sync": {
-        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "revision": "72f32706ae06a5e05207312e8c7f39a3f7285003",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:47:23Z",
+        "finishedAt": "2026-11-16T07:06:43Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -4678,16 +4680,16 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794811623",
+        "autoscaling/last-scale": "1794812777",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794811622",
+        "replaced-at": "1794812775",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T23:06:11-08:00"
       },
       "containers": [
         {
@@ -4742,7 +4744,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -4776,7 +4778,7 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:54Z",
+          "time": "2026-11-16T07:06:07Z",
           "leaves": [
             "metadata.labels.team",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
@@ -4786,7 +4788,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:55Z",
+          "time": "2026-11-16T07:06:08Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -4795,7 +4797,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:56Z",
+          "time": "2026-11-16T07:06:10Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -4804,7 +4806,7 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:58Z",
+          "time": "2026-11-16T07:06:11Z",
           "leaves": [
             "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
@@ -4814,7 +4816,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:01Z",
+          "time": "2026-11-16T07:06:14Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -4823,7 +4825,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:02Z",
+          "time": "2026-11-16T07:06:15Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -4832,7 +4834,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:03Z",
+          "time": "2026-11-16T07:06:17Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -4841,7 +4843,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -4871,7 +4873,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:05Z",
+          "time": "2026-11-16T07:06:18Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -4880,7 +4882,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:06Z",
+          "time": "2026-11-16T07:06:20Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -4893,9 +4895,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of v2 (server-side apply)",
       "sync": {
-        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "revision": "72f32706ae06a5e05207312e8c7f39a3f7285003",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:47:35Z",
+        "finishedAt": "2026-11-16T07:06:57Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -4962,7 +4964,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:37Z",
+          "time": "2026-11-16T07:05:52Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -4989,7 +4991,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:47Z",
+          "time": "2026-11-16T07:06:02Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
             "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env..",
@@ -5011,7 +5013,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:48Z",
+          "time": "2026-11-16T07:06:03Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -5045,9 +5047,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of v2 (server-side apply)",
       "sync": {
-        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "revision": "72f32706ae06a5e05207312e8c7f39a3f7285003",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:47:12Z",
+        "finishedAt": "2026-11-16T07:06:32Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -5114,7 +5116,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:18Z",
+          "time": "2026-11-16T07:05:34Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -5145,10 +5147,19 @@ window.REPRO = {
           ]
         },
         {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T07:05:59Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        },
+        {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:42Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -5173,15 +5184,6 @@ window.REPRO = {
             "status.terminatingReplicas",
             "status.updatedReplicas"
           ]
-        },
-        {
-          "manager": "kubectl-set",
-          "operation": "Update",
-          "subresource": null,
-          "time": "2026-11-16T06:46:42Z",
-          "leaves": [
-            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
-          ]
         }
       ]
     },
@@ -5191,9 +5193,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of v2 (server-side apply)",
       "sync": {
-        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "revision": "72f32706ae06a5e05207312e8c7f39a3f7285003",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:47:29Z",
+        "finishedAt": "2026-11-16T07:06:49Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -5262,7 +5264,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:32Z",
+          "time": "2026-11-16T07:05:48Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -5296,7 +5298,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:43Z",
+          "time": "2026-11-16T07:06:00Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -5305,7 +5307,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -5314,7 +5316,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -5323,7 +5325,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:46:53Z",
+          "time": "2026-11-16T07:06:06Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -5357,9 +5359,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of v2 (server-side apply)",
       "sync": {
-        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "revision": "72f32706ae06a5e05207312e8c7f39a3f7285003",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:47:18Z",
+        "finishedAt": "2026-11-16T07:06:38Z",
         "options": [
           "ServerSideApply=true"
         ]
@@ -5425,7 +5427,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:47:18Z",
+          "time": "2026-11-16T07:06:38Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -5459,7 +5461,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:18Z",
+          "time": "2026-11-16T07:06:38Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -5493,9 +5495,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v2 with Replace=true RespectIgnoreDifferences=true (PUT)",
       "sync": {
-        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "revision": "72f32706ae06a5e05207312e8c7f39a3f7285003",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:47:47Z",
+        "finishedAt": "2026-11-16T07:07:09Z",
         "options": [
           "ServerSideApply=true",
           "Replace=true",
@@ -5565,7 +5567,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:32Z",
+          "time": "2026-11-16T07:05:48Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -5599,7 +5601,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -5608,7 +5610,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:46:52Z",
+          "time": "2026-11-16T07:06:05Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -5617,7 +5619,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:48Z",
+          "time": "2026-11-16T07:07:10Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
@@ -5651,9 +5653,9 @@ window.REPRO = {
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v2 with Replace=true (PUT)",
       "sync": {
-        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "revision": "72f32706ae06a5e05207312e8c7f39a3f7285003",
         "phase": "Succeeded",
-        "finishedAt": "2026-11-16T06:47:41Z",
+        "finishedAt": "2026-11-16T07:07:03Z",
         "options": [
           "ServerSideApply=true",
           "Replace=true"
@@ -5720,7 +5722,7 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:46:28Z",
+          "time": "2026-11-16T07:05:43Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
@@ -5754,7 +5756,7 @@ window.REPRO = {
           "manager": "argocd-application-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:47:41Z",
+          "time": "2026-11-16T07:07:03Z",
           "leaves": [
             "spec.replicas"
           ]
@@ -5763,7 +5765,7 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:47:42Z",
+          "time": "2026-11-16T07:07:04Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
