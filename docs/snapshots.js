@@ -3,15 +3,19 @@ window.REPRO = {
   "argocd": "v3.6.1",
   "k8s": "v1.37.0",
   "container": "retriever",
+  "sidecar": "feature-cache",
   "incident": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
   "namespaces": {
     "drift": "demo-drift",
     "resync": "demo-resync",
-    "compacted": "demo-compacted"
+    "compacted": "demo-compacted",
+    "put": "demo-put",
+    "container": "demo-container"
   },
   "manifests": {
-    "v1": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ranker\n  labels:\n    app: ranker\nspec:\n  selector:\n    matchLabels:\n      app: ranker\n  template:\n    metadata:\n      labels:\n        app: ranker\n    spec:\n      terminationGracePeriodSeconds: 1\n      containers:\n        - name: retriever\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n        - name: ranker\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n",
-    "v2": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ranker\n  labels:\n    app: ranker\nspec:\n  selector:\n    matchLabels:\n      app: ranker\n  template:\n    metadata:\n      labels:\n        app: ranker\n    spec:\n      terminationGracePeriodSeconds: 1\n      containers:\n        - name: retriever\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {memory: 64Mi}\n        - name: ranker\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n"
+    "v1": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ranker\n  labels:\n    app: ranker\nspec:\n  selector:\n    matchLabels:\n      app: ranker\n  template:\n    metadata:\n      labels:\n        app: ranker\n    spec:\n      terminationGracePeriodSeconds: 1\n      containers:\n        - name: retriever\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n        - name: ranker\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n        - name: feature-cache\n          image: registry.k8s.io/pause:3.10\n          env:\n            - name: CACHE_MODE\n              value: legacy\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n",
+    "v2": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ranker\n  labels:\n    app: ranker\nspec:\n  selector:\n    matchLabels:\n      app: ranker\n  template:\n    metadata:\n      labels:\n        app: ranker\n    spec:\n      terminationGracePeriodSeconds: 1\n      containers:\n        - name: retriever\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {memory: 64Mi}\n        - name: ranker\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n        - name: feature-cache\n          image: registry.k8s.io/pause:3.10\n          env:\n            - name: CACHE_MODE\n              value: legacy\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n",
+    "v2c": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ranker\n  labels:\n    app: ranker\nspec:\n  selector:\n    matchLabels:\n      app: ranker\n  template:\n    metadata:\n      labels:\n        app: ranker\n    spec:\n      terminationGracePeriodSeconds: 1\n      containers:\n        - name: retriever\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n        - name: ranker\n          image: registry.k8s.io/pause:3.10\n          resources:\n            requests: {cpu: 10m, memory: 16Mi}\n            limits: {cpu: 500m, memory: 64Mi}\n"
   },
   "snapshots": [
     {
@@ -19,6 +23,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -32,6 +44,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
@@ -46,11 +59,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -63,18 +93,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
@@ -88,16 +128,157 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:47Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "1-argo-create",
+      "ns": "demo-container",
+      "argo": "Synced/Healthy",
+      "note": "Argo CD sync of manifests/v1 (server-side apply)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:37Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 1,
+      "labels": {
+        "app": "ranker"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-container:apps/Deployment:demo-container/ranker",
+        "deployment.kubernetes.io/revision": "1"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:37Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:38Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -118,6 +299,14 @@ window.REPRO = {
       "ns": "demo-drift",
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:18Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -131,6 +320,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
@@ -145,11 +335,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -162,18 +369,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:35Z",
+          "time": "2026-11-16T06:46:18Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
@@ -187,16 +404,157 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:35Z",
+          "time": "2026-11-16T06:46:19Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "1-argo-create",
+      "ns": "demo-put",
+      "argo": "Synced/Healthy",
+      "note": "Argo CD sync of manifests/v1 (server-side apply)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:32Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 1,
+      "labels": {
+        "app": "ranker"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-put:apps/Deployment:demo-put/ranker",
+        "deployment.kubernetes.io/revision": "1"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:32Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:33Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -217,6 +575,14 @@ window.REPRO = {
       "ns": "demo-resync",
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 (server-side apply)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:23Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -230,6 +596,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
@@ -244,11 +611,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -261,18 +645,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:39Z",
+          "time": "2026-11-16T06:46:23Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
@@ -286,16 +680,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:40Z",
+          "time": "2026-11-16T06:46:24Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -316,6 +713,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Progressing",
       "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -329,6 +734,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -343,11 +749,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -360,18 +783,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -384,16 +817,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -412,7 +848,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -424,6 +860,14 @@ window.REPRO = {
       "ns": "demo-drift",
       "argo": "OutOfSync/Progressing",
       "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:18Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -437,6 +881,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -451,11 +896,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -468,18 +930,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:35Z",
+          "time": "2026-11-16T06:46:18Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -492,16 +964,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:51Z",
+          "time": "2026-11-16T06:46:42Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -520,7 +995,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:51Z",
+          "time": "2026-11-16T06:46:42Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -529,15 +1004,23 @@ window.REPRO = {
     },
     {
       "step": "2-incident",
-      "ns": "demo-resync",
-      "argo": "OutOfSync/Healthy",
+      "ns": "demo-put",
+      "argo": "OutOfSync/Progressing",
       "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:32Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
       },
       "annotations": {
-        "argocd.argoproj.io/tracking-id": "ranker-demo-resync:apps/Deployment:demo-resync/ranker",
+        "argocd.argoproj.io/tracking-id": "ranker-demo-put:apps/Deployment:demo-put/ranker",
         "deployment.kubernetes.io/revision": "2"
       },
       "tplAnnotations": {},
@@ -545,6 +1028,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -559,6 +1043,301 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:32Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:43Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2-incident",
+      "ns": "demo-resync",
+      "argo": "OutOfSync/Progressing",
+      "note": "kubectl set resources deploy/ranker -c retriever --limits=cpu=2",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:23Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 1,
+      "labels": {
+        "app": "ranker"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-resync:apps/Deployment:demo-resync/ranker",
+        "deployment.kubernetes.io/revision": "2"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "2",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:23Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:42Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.unavailableReplicas",
+            "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:42Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2a-remove",
+      "ns": "demo-container",
+      "argo": "OutOfSync/Healthy",
+      "note": "kubectl patch deploy ranker --type json -p '[{\"op\":\"remove\",\"path\":\"/spec/template/spec/containers/2\"}]'",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:37Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 1,
+      "labels": {
+        "app": "ranker"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-container:apps/Deployment:demo-container/ranker",
+        "deployment.kubernetes.io/revision": "2"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
@@ -576,18 +1355,312 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:39Z",
+          "time": "2026-11-16T06:46:37Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:44Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "2b-readd",
+      "ns": "demo-container",
+      "argo": "Synced/Healthy",
+      "note": "kubectl patch deploy ranker --type json -p '[{\"op\":\"add\",\"path\":\"/spec/template/spec/containers/-\",\"value\":{\"name\":\"feature-cache\",…same spec as Git…}}]'",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:37Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 1,
+      "labels": {
+        "app": "ranker"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-container:apps/Deployment:demo-container/ranker",
+        "deployment.kubernetes.io/revision": "3"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:37Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:47Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:48Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "3-day2",
+      "ns": "demo-put",
+      "argo": "OutOfSync/Healthy",
+      "note": "kubectl label deploy ranker team=search; kubectl label … cost-center=ml-42; kubectl scale … --replicas=2",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:32Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "cost-center": "ml-42",
+        "team": "search"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-put:apps/Deployment:demo-put/ranker",
+        "deployment.kubernetes.io/revision": "2"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "2",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:32Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -600,25 +1673,37 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:51Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        },
+        {
+          "manager": "cost-attribution-bot",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.cost-center"
           ]
         },
         {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:52Z",
+          "time": "2026-11-16T06:46:52Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -629,7 +1714,17 @@ window.REPRO = {
             "status.readyReplicas",
             "status.replicas",
             "status.terminatingReplicas",
+            "status.unavailableReplicas",
             "status.updatedReplicas"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.team"
           ]
         }
       ]
@@ -639,6 +1734,14 @@ window.REPRO = {
       "ns": "demo-resync",
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v1 again (server-side apply, force-conflicts)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:50Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -652,6 +1755,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
@@ -666,11 +1770,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -683,18 +1804,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:50Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
@@ -708,16 +1839,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:55Z",
+          "time": "2026-11-16T06:46:50Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -738,6 +1872,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
       "note": "kubectl label deploy ranker team=search --overwrite",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker",
@@ -752,6 +1894,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -766,11 +1909,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -783,18 +1943,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -807,16 +1977,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -834,7 +2007,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -843,7 +2016,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -855,6 +2028,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
       "note": "kubectl annotate deploy ranker owner=ranking-oncall --overwrite",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker",
@@ -870,6 +2051,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -884,11 +2066,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -901,18 +2100,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -925,7 +2134,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -934,7 +2143,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -943,16 +2152,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -970,7 +2182,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -982,6 +2194,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
       "note": "kubectl patch deploy ranker --type merge -p '{\"metadata\":{\"annotations\":{\"ticket\":\"INC-1234\"}}}'",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker",
@@ -998,6 +2218,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -1012,11 +2233,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -1029,18 +2267,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -1053,7 +2301,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1062,7 +2310,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -1071,7 +2319,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -1080,16 +2328,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -1107,7 +2358,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -1119,6 +2370,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
       "note": "kubectl rollout restart deploy/ranker",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker",
@@ -1131,12 +2390,13 @@ window.REPRO = {
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -1151,11 +2411,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -1168,18 +2445,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -1192,7 +2479,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1201,7 +2488,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -1210,7 +2497,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -1219,7 +2506,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -1228,16 +2515,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -1256,8 +2546,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         }
@@ -1268,6 +2559,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
       "note": "kubectl scale deploy/ranker --replicas=2",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -1280,12 +2579,13 @@ window.REPRO = {
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -1300,11 +2600,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -1317,18 +2634,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -1341,7 +2668,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1350,7 +2677,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -1359,7 +2686,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -1368,7 +2695,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -1377,8 +2704,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1386,16 +2714,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:03Z",
+          "time": "2026-11-16T06:46:59Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -1417,6 +2748,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
       "note": "kubectl edit deploy/ranker -o json   # editor adds annotation edited-by",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -1430,12 +2769,13 @@ window.REPRO = {
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -1450,11 +2790,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -1467,18 +2824,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -1491,7 +2858,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1500,7 +2867,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -1509,7 +2876,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -1518,7 +2885,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -1527,8 +2894,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1536,16 +2904,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -1563,7 +2934,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -1575,6 +2946,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
       "note": "kubectl get deploy ranker -o json | jq '.metadata.annotations.\"replaced-at\"=\"<now>\"' | kubectl replace -f -",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -1585,16 +2964,17 @@ window.REPRO = {
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "owner": "ranking-oncall",
-        "replaced-at": "1794809586",
+        "replaced-at": "1794811622",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -1609,11 +2989,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -1626,18 +3023,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -1650,7 +3057,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1659,7 +3066,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -1668,7 +3075,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -1677,7 +3084,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -1686,8 +3093,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1695,7 +3103,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -1704,16 +3112,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:06Z",
+          "time": "2026-11-16T06:47:02Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -1731,7 +3142,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:06Z",
+          "time": "2026-11-16T06:47:02Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -1742,7 +3153,15 @@ window.REPRO = {
       "step": "3v-08",
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
-      "note": "kubectl annotate deploy ranker --field-manager=hpa-controller autoscaling/last-scale=<now> --overwrite",
+      "note": "kubectl annotate deploy ranker --field-manager=hpa-controller autoscaling/last-scale=<now> --overwrite   # simulated manager name",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -1750,20 +3169,21 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794809587",
+        "autoscaling/last-scale": "1794811623",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "owner": "ranking-oncall",
-        "replaced-at": "1794809586",
+        "replaced-at": "1794811622",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -1778,11 +3198,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -1795,18 +3232,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -1819,7 +3266,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -1828,7 +3275,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -1837,7 +3284,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -1846,7 +3293,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -1855,8 +3302,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -1864,7 +3312,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -1873,7 +3321,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:06Z",
+          "time": "2026-11-16T06:47:02Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -1882,7 +3330,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:07Z",
+          "time": "2026-11-16T06:47:03Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -1891,16 +3339,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:07Z",
+          "time": "2026-11-16T06:47:03Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -1920,7 +3371,15 @@ window.REPRO = {
       "step": "3v-09",
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
-      "note": "kubectl patch deploy ranker --field-manager=migration-orchestrator --type merge -p '{\"metadata\":{\"annotations\":{\"migration/state\":\"done\"}}}'",
+      "note": "kubectl patch deploy ranker --field-manager=migration-orchestrator --type merge -p '{\"metadata\":{\"annotations\":{\"migration/state\":\"done\"}}}'   # simulated manager name",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -1928,21 +3387,22 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794809587",
+        "autoscaling/last-scale": "1794811623",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794809586",
+        "replaced-at": "1794811622",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -1957,11 +3417,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -1974,18 +3451,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -1998,7 +3485,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:43Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -2007,7 +3494,7 @@ window.REPRO = {
           "manager": "kubectl-label",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team"
           ]
@@ -2016,7 +3503,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2025,7 +3512,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2034,8 +3521,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -2043,7 +3531,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -2052,7 +3540,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:06Z",
+          "time": "2026-11-16T06:47:02Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -2061,7 +3549,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:07Z",
+          "time": "2026-11-16T06:47:03Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -2070,16 +3558,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -2097,7 +3588,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -2108,7 +3599,15 @@ window.REPRO = {
       "step": "3v-10",
       "ns": "demo-compacted",
       "argo": "OutOfSync/Healthy",
-      "note": "kubectl label deploy ranker --field-manager=cost-attribution-bot cost-center=ml-42 --overwrite",
+      "note": "kubectl label deploy ranker --field-manager=cost-attribution-bot cost-center=ml-42 --overwrite   # simulated manager name",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -2117,21 +3616,22 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794809587",
+        "autoscaling/last-scale": "1794811623",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794809586",
+        "replaced-at": "1794811622",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -2146,11 +3646,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -2163,18 +3680,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -2187,7 +3714,7 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
@@ -2197,7 +3724,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2206,7 +3733,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2215,8 +3742,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -2224,7 +3752,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -2233,7 +3761,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:06Z",
+          "time": "2026-11-16T06:47:02Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -2242,7 +3770,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:07Z",
+          "time": "2026-11-16T06:47:03Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -2251,16 +3779,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -2278,7 +3809,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -2287,7 +3818,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:10Z",
+          "time": "2026-11-16T06:47:06Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -2299,6 +3830,14 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "Synced/Healthy",
       "note": "git commit: delete retriever's CPU limit (manifests/v2)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:28Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -2307,21 +3846,22 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794809587",
+        "autoscaling/last-scale": "1794811623",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794809586",
+        "replaced-at": "1794811622",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -2336,11 +3876,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -2353,18 +3910,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -2377,7 +3944,7 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
@@ -2387,7 +3954,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2396,7 +3963,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2405,8 +3972,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -2414,7 +3982,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -2423,7 +3991,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:06Z",
+          "time": "2026-11-16T06:47:02Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -2432,7 +4000,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:07Z",
+          "time": "2026-11-16T06:47:03Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -2441,16 +4009,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -2468,7 +4039,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -2477,9 +4048,161 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:10Z",
+          "time": "2026-11-16T06:47:06Z",
           "leaves": [
             "metadata.labels.cost-center"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "4-git-v2",
+      "ns": "demo-container",
+      "argo": "Synced/Healthy",
+      "note": "git commit: delete the feature-cache container (manifests/v2-container)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:37Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 1,
+      "labels": {
+        "app": "ranker"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-container:apps/Deployment:demo-container/ranker",
+        "deployment.kubernetes.io/revision": "3"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:37Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:47Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:48Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
           ]
         }
       ]
@@ -2489,6 +4212,14 @@ window.REPRO = {
       "ns": "demo-drift",
       "argo": "Synced/Healthy",
       "note": "git commit: delete retriever's CPU limit (manifests/v2)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:18Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -2502,6 +4233,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -2516,11 +4248,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -2533,18 +4282,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:35Z",
+          "time": "2026-11-16T06:46:18Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -2557,16 +4316,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:51Z",
+          "time": "2026-11-16T06:46:42Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -2584,9 +4346,175 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:51Z",
+          "time": "2026-11-16T06:46:42Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "4-git-v2",
+      "ns": "demo-put",
+      "argo": "Synced/Healthy",
+      "note": "git commit: delete retriever's CPU limit (manifests/v2)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:32Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "cost-center": "ml-42",
+        "team": "search"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-put:apps/Deployment:demo-put/ranker",
+        "deployment.kubernetes.io/revision": "2"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "2",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:32Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        },
+        {
+          "manager": "cost-attribution-bot",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.cost-center"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:53Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
           ]
         }
       ]
@@ -2596,6 +4524,14 @@ window.REPRO = {
       "ns": "demo-resync",
       "argo": "OutOfSync/Healthy",
       "note": "git commit: delete retriever's CPU limit (manifests/v2)",
+      "sync": {
+        "revision": "5cf19d07482eb0174dee1b13838de106deb7a1a6",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:46:50Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -2609,6 +4545,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
@@ -2623,11 +4560,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -2640,18 +4594,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:54Z",
+          "time": "2026-11-16T06:46:50Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
@@ -2665,16 +4629,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:55Z",
+          "time": "2026-11-16T06:46:50Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -2694,7 +4661,15 @@ window.REPRO = {
       "step": "5-argo-sync-v2",
       "ns": "demo-compacted",
       "argo": "Synced/Healthy",
-      "note": "Argo CD sync of manifests/v2 (server-side apply)",
+      "note": "Argo CD sync of v2 (server-side apply)",
+      "sync": {
+        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:47:23Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 2,
       "labels": {
         "app": "ranker",
@@ -2703,21 +4678,22 @@ window.REPRO = {
       },
       "annotations": {
         "argocd.argoproj.io/tracking-id": "ranker-demo-compacted:apps/Deployment:demo-compacted/ranker",
-        "autoscaling/last-scale": "1794809587",
+        "autoscaling/last-scale": "1794811623",
         "deployment.kubernetes.io/revision": "3",
         "edited-by": "kubectl-edit",
         "migration/state": "done",
         "owner": "ranking-oncall",
-        "replaced-at": "1794809586",
+        "replaced-at": "1794811622",
         "ticket": "INC-1234"
       },
       "tplAnnotations": {
-        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:13:02-08:00"
+        "kubectl.kubernetes.io/restartedAt": "2026-11-15T22:46:58-08:00"
       },
       "containers": [
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -2732,11 +4708,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -2749,18 +4742,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -2773,7 +4776,7 @@ window.REPRO = {
           "manager": "ancient-changes",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:58Z",
+          "time": "2026-11-16T06:46:54Z",
           "leaves": [
             "metadata.labels.team",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
@@ -2783,7 +4786,7 @@ window.REPRO = {
           "manager": "kubectl-annotate",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:59Z",
+          "time": "2026-11-16T06:46:55Z",
           "leaves": [
             "metadata.annotations.owner"
           ]
@@ -2792,7 +4795,7 @@ window.REPRO = {
           "manager": "kubectl-patch",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:00Z",
+          "time": "2026-11-16T06:46:56Z",
           "leaves": [
             "metadata.annotations.ticket"
           ]
@@ -2801,8 +4804,9 @@ window.REPRO = {
           "manager": "kubectl-rollout",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:02Z",
+          "time": "2026-11-16T06:46:58Z",
           "leaves": [
+            "spec.template.metadata.annotations..",
             "spec.template.metadata.annotations.kubectl.kubernetes.io/restartedAt"
           ]
         },
@@ -2810,7 +4814,7 @@ window.REPRO = {
           "manager": "kubectl-edit",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:05Z",
+          "time": "2026-11-16T06:47:01Z",
           "leaves": [
             "metadata.annotations.edited-by"
           ]
@@ -2819,7 +4823,7 @@ window.REPRO = {
           "manager": "kubectl-replace",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:06Z",
+          "time": "2026-11-16T06:47:02Z",
           "leaves": [
             "metadata.annotations.replaced-at"
           ]
@@ -2828,7 +4832,7 @@ window.REPRO = {
           "manager": "hpa-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:07Z",
+          "time": "2026-11-16T06:47:03Z",
           "leaves": [
             "metadata.annotations.autoscaling/last-scale"
           ]
@@ -2837,16 +4841,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -2864,7 +4871,7 @@ window.REPRO = {
           "manager": "migration-orchestrator",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:09Z",
+          "time": "2026-11-16T06:47:05Z",
           "leaves": [
             "metadata.annotations.migration/state"
           ]
@@ -2873,7 +4880,7 @@ window.REPRO = {
           "manager": "cost-attribution-bot",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:10Z",
+          "time": "2026-11-16T06:47:06Z",
           "leaves": [
             "metadata.labels.cost-center"
           ]
@@ -2882,9 +4889,169 @@ window.REPRO = {
     },
     {
       "step": "5-argo-sync-v2",
+      "ns": "demo-container",
+      "argo": "Synced/Healthy",
+      "note": "Argo CD sync of v2 (server-side apply)",
+      "sync": {
+        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:47:35Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 1,
+      "labels": {
+        "app": "ranker"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-container:apps/Deployment:demo-container/ranker",
+        "deployment.kubernetes.io/revision": "3"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:37Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-patch",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:47Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.imagePullPolicy",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePath",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.terminationMessagePolicy"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:48Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "5-argo-sync-v2",
       "ns": "demo-drift",
       "argo": "Synced/Healthy",
-      "note": "Argo CD sync of manifests/v2 (server-side apply)",
+      "note": "Argo CD sync of v2 (server-side apply)",
+      "sync": {
+        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:47:12Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -2898,6 +5065,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "2",
@@ -2912,11 +5080,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -2929,18 +5114,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:35Z",
+          "time": "2026-11-16T06:46:18Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -2953,16 +5148,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:12:51Z",
+          "time": "2026-11-16T06:46:42Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -2980,7 +5178,7 @@ window.REPRO = {
           "manager": "kubectl-set",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:12:51Z",
+          "time": "2026-11-16T06:46:42Z",
           "leaves": [
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
           ]
@@ -2989,9 +5187,183 @@ window.REPRO = {
     },
     {
       "step": "5-argo-sync-v2",
+      "ns": "demo-put",
+      "argo": "Synced/Healthy",
+      "note": "Argo CD sync of v2 (server-side apply)",
+      "sync": {
+        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:47:29Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "cost-center": "ml-42",
+        "team": "search"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-put:apps/Deployment:demo-put/ranker",
+        "deployment.kubernetes.io/revision": "2"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "2",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:32Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "kubectl-set",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:43Z",
+          "leaves": [
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.cpu"
+          ]
+        },
+        {
+          "manager": "cost-attribution-bot",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.cost-center"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:46:53Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "5-argo-sync-v2",
       "ns": "demo-resync",
       "argo": "Synced/Healthy",
-      "note": "Argo CD sync of manifests/v2 (server-side apply)",
+      "note": "Argo CD sync of v2 (server-side apply)",
+      "sync": {
+        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:47:18Z",
+        "options": [
+          "ServerSideApply=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -3005,6 +5377,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "memory": "64Mi"
@@ -3018,11 +5391,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -3035,18 +5425,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:13:21Z",
+          "time": "2026-11-16T06:47:18Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -3059,16 +5459,177 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:22Z",
+          "time": "2026-11-16T06:47:18Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
+            "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Progressing\"}.message",
+            "status.conditions.{\"type\":\"Progressing\"}.reason",
+            "status.conditions.{\"type\":\"Progressing\"}.status",
+            "status.conditions.{\"type\":\"Progressing\"}.type",
+            "status.observedGeneration",
+            "status.readyReplicas",
+            "status.replicas",
+            "status.terminatingReplicas",
+            "status.updatedReplicas"
+          ]
+        }
+      ]
+    },
+    {
+      "step": "6-put-rid",
+      "ns": "demo-put",
+      "argo": "Synced/Healthy",
+      "note": "Argo CD sync of manifests/v2 with Replace=true RespectIgnoreDifferences=true (PUT)",
+      "sync": {
+        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:47:47Z",
+        "options": [
+          "ServerSideApply=true",
+          "Replace=true",
+          "RespectIgnoreDifferences=true"
+        ]
+      },
+      "replicas": 2,
+      "labels": {
+        "app": "ranker",
+        "cost-center": "ml-42",
+        "team": "search"
+      },
+      "annotations": {
+        "argocd.argoproj.io/tracking-id": "ranker-demo-put:apps/Deployment:demo-put/ranker",
+        "deployment.kubernetes.io/revision": "3"
+      },
+      "tplAnnotations": {},
+      "containers": [
+        {
+          "name": "retriever",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "ranker",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [],
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        }
+      ],
+      "managers": [
+        {
+          "manager": "argocd-controller",
+          "operation": "Apply",
+          "subresource": null,
+          "time": "2026-11-16T06:46:32Z",
+          "leaves": [
+            "metadata.annotations.argocd.argoproj.io/tracking-id",
+            "metadata.labels.app",
+            "spec.selector",
+            "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.requests.memory",
+            "spec.template.spec.terminationGracePeriodSeconds"
+          ]
+        },
+        {
+          "manager": "cost-attribution-bot",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.cost-center"
+          ]
+        },
+        {
+          "manager": "kubectl-label",
+          "operation": "Update",
+          "subresource": null,
+          "time": "2026-11-16T06:46:52Z",
+          "leaves": [
+            "metadata.labels.team"
+          ]
+        },
+        {
+          "manager": "kube-controller-manager",
+          "operation": "Update",
+          "subresource": "status",
+          "time": "2026-11-16T06:47:48Z",
+          "leaves": [
+            "metadata.annotations.deployment.kubernetes.io/revision",
+            "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
+            "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
+            "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
+            "status.conditions.{\"type\":\"Available\"}.message",
+            "status.conditions.{\"type\":\"Available\"}.reason",
+            "status.conditions.{\"type\":\"Available\"}.status",
+            "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",
@@ -3089,6 +5650,15 @@ window.REPRO = {
       "ns": "demo-compacted",
       "argo": "Synced/Healthy",
       "note": "Argo CD sync of manifests/v2 with Replace=true (PUT)",
+      "sync": {
+        "revision": "92d51298f780a8726eb3812ea60831768b5dacfd",
+        "phase": "Succeeded",
+        "finishedAt": "2026-11-16T06:47:41Z",
+        "options": [
+          "ServerSideApply=true",
+          "Replace=true"
+        ]
+      },
       "replicas": 1,
       "labels": {
         "app": "ranker"
@@ -3102,6 +5672,7 @@ window.REPRO = {
         {
           "name": "retriever",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "memory": "64Mi"
@@ -3115,11 +5686,28 @@ window.REPRO = {
         {
           "name": "ranker",
           "image": "registry.k8s.io/pause:3.10",
+          "env": [],
           "resources": {
             "limits": {
               "cpu": "500m",
               "memory": "64Mi"
             },
+            "requests": {
+              "cpu": "10m",
+              "memory": "16Mi"
+            }
+          }
+        },
+        {
+          "name": "feature-cache",
+          "image": "registry.k8s.io/pause:3.10",
+          "env": [
+            {
+              "name": "CACHE_MODE",
+              "value": "legacy"
+            }
+          ],
+          "resources": {
             "requests": {
               "cpu": "10m",
               "memory": "16Mi"
@@ -3132,18 +5720,28 @@ window.REPRO = {
           "manager": "argocd-controller",
           "operation": "Apply",
           "subresource": null,
-          "time": "2026-11-16T06:12:46Z",
+          "time": "2026-11-16T06:46:28Z",
           "leaves": [
             "metadata.annotations.argocd.argoproj.io/tracking-id",
             "metadata.labels.app",
             "spec.selector",
             "spec.template.metadata.labels.app",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}..",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.env.{\"name\":\"CACHE_MODE\"}.value",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.image",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.name",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.cpu",
+            "spec.template.spec.containers.{\"name\":\"feature-cache\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"ranker\"}..",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.image",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.name",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.limits.memory",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.cpu",
             "spec.template.spec.containers.{\"name\":\"ranker\"}.resources.requests.memory",
+            "spec.template.spec.containers.{\"name\":\"retriever\"}..",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.image",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.name",
             "spec.template.spec.containers.{\"name\":\"retriever\"}.resources.limits.memory",
@@ -3156,7 +5754,7 @@ window.REPRO = {
           "manager": "argocd-application-controller",
           "operation": "Update",
           "subresource": null,
-          "time": "2026-11-16T06:13:32Z",
+          "time": "2026-11-16T06:47:41Z",
           "leaves": [
             "spec.replicas"
           ]
@@ -3165,16 +5763,19 @@ window.REPRO = {
           "manager": "kube-controller-manager",
           "operation": "Update",
           "subresource": "status",
-          "time": "2026-11-16T06:13:33Z",
+          "time": "2026-11-16T06:47:42Z",
           "leaves": [
             "metadata.annotations.deployment.kubernetes.io/revision",
             "status.availableReplicas",
+            "status.conditions..",
+            "status.conditions.{\"type\":\"Available\"}..",
             "status.conditions.{\"type\":\"Available\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Available\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Available\"}.message",
             "status.conditions.{\"type\":\"Available\"}.reason",
             "status.conditions.{\"type\":\"Available\"}.status",
             "status.conditions.{\"type\":\"Available\"}.type",
+            "status.conditions.{\"type\":\"Progressing\"}..",
             "status.conditions.{\"type\":\"Progressing\"}.lastTransitionTime",
             "status.conditions.{\"type\":\"Progressing\"}.lastUpdateTime",
             "status.conditions.{\"type\":\"Progressing\"}.message",

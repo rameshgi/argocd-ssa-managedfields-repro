@@ -1,4 +1,4 @@
-# v2: identical to v1 except retriever's CPU limit has been REMOVED (a common
+# v2 (apps/ranker): identical to v1 except retriever's CPU limit has been REMOVED (a common
 # cleanup: "don't set CPU limits"). After Argo CD syncs this with
 # ServerSideApply=true, retriever should have no CPU limit.
 apiVersion: apps/v1
@@ -28,3 +28,10 @@ spec:
           resources:
             requests: {cpu: 10m, memory: 16Mi}
             limits: {cpu: 500m, memory: 64Mi}
+        - name: feature-cache
+          image: registry.k8s.io/pause:3.10
+          env:
+            - name: CACHE_MODE
+              value: legacy
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}

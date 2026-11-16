@@ -1,6 +1,6 @@
-# Rendered by scripts/05-create-apps.sh with ${NAMESPACE} substituted.
-# Manual sync (no automated policy) so the scripts control exactly when Argo CD
-# applies; sync options are passed on each sync operation as well.
+# Rendered by scripts/04-create-apps.sh with ${NAMESPACE} and ${APP_PATH}
+# substituted. Manual sync (no automated policy) so the scripts control exactly
+# when Argo CD applies; sync options are passed on each sync operation as well.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: file:///repro-git/manifests.git
     targetRevision: main
-    path: apps/ranker
+    path: ${APP_PATH}
   destination:
     server: https://kubernetes.default.svc
     namespace: ${NAMESPACE}

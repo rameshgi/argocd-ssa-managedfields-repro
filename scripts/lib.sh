@@ -16,16 +16,24 @@ GIT_HOST_DIR="${WORK_DIR}/git"
 BARE_REPO="${GIT_HOST_DIR}/manifests.git"
 CHECKOUT_DIR="${WORK_DIR}/checkout"
 
-# Three scenarios, side by side. In all of them Argo CD creates the object with
-# server-side apply, an on-call engineer changes one Argo CD-managed field with
-# kubectl during an incident, and Git later deletes that field.
-#   demo-drift     : Git drops the field; Argo CD syncs           -> field stays, Synced   (BUG)
-#   demo-resync    : Argo CD re-syncs before Git drops the field  -> field removed          (control)
-#   demo-compacted : like demo-drift, plus >10 Update managers    -> field stays, owner now "ancient-changes"
+# Scenarios, side by side. In all of them Argo CD creates the object with
+# server-side apply, someone changes it with kubectl during an incident, and Git
+# later deletes what was changed.
+#   demo-drift     : kubectl changes retriever's CPU limit; Git drops it      -> field stays, Synced  (BUG)
+#   demo-resync    : same, but Argo CD re-syncs before Git drops it           -> field removed         (control)
+#   demo-compacted : like demo-drift, plus >10 Update managers                -> field stays, owner "ancient-changes"
+#   demo-put       : like demo-drift, plus day-2 replicas/labels; ends with a
+#                    Replace=true + RespectIgnoreDifferences=true sync          (contrast, step 08)
+#   demo-container : kubectl removes and re-adds the feature-cache container;
+#                    Git drops that container                                -> container stays, Synced (BUG)
 NS_DRIFT="demo-drift"
 NS_RESYNC="demo-resync"
 NS_COMPACTED="demo-compacted"
-ALL_NS=("${NS_DRIFT}" "${NS_RESYNC}" "${NS_COMPACTED}")
+NS_PUT="demo-put"
+NS_CONTAINER="demo-container"
+FIELD_NS=("${NS_DRIFT}" "${NS_RESYNC}" "${NS_COMPACTED}" "${NS_PUT}")
+ALL_NS=("${FIELD_NS[@]}" "${NS_CONTAINER}")
+app_path() { [[ "$1" == "${NS_CONTAINER}" ]] && echo apps/ranker-container || echo apps/ranker; }
 
 DEPLOY="ranker"
 ARGO_MANAGER="argocd-controller"   # Argo CD's server-side-apply field manager
@@ -34,6 +42,8 @@ FIELD_CONTAINER="retriever"
 FIELD_DESC="spec.template.spec.containers[name=${FIELD_CONTAINER}].resources.limits.cpu"
 INCIDENT_CPU="2"                   # value on-call sets during the incident
 INCIDENT_CMD="kubectl set resources deploy/${DEPLOY} -c ${FIELD_CONTAINER} --limits=cpu=${INCIDENT_CPU}"
+# The container that is removed and re-added during the incident (demo-container).
+SIDECAR="feature-cache"
 
 k() { kubectl --context "${KCTX}" "$@"; }
 
@@ -60,16 +70,26 @@ field_owners() {
     | "\(.manager) (\(.operation))"] | join(", ")'
 }
 
-# Save the live Deployment (+ the Application's sync/health) for the README
-# timeline and the interactive page. See scripts/render-timeline.sh.
+live_containers() { deploy_json "$1" | jq -r '[.spec.template.spec.containers[].name] | join(",")'; }
+
+# Managers whose managedFields entry claims the given container list item.
+container_owners() { # ns container
+  deploy_json "$1" | jq -r --arg c "k:{\"name\":\"$2\"}" '[.metadata.managedFields[]
+    | select(.fieldsV1["f:spec"]["f:template"]["f:spec"]["f:containers"][$c] != null)
+    | "\(.manager) (\(.operation))"] | join(", ")'
+}
+
+# Save the live Deployment (+ the Application's sync/health and its last sync
+# operation) for the README timeline and the interactive page.
 SNAP_DIR="${WORK_DIR}/snapshots"
 snapshot() { # label ns [note]
-  local argo k8s
+  local argo k8s sync
   mkdir -p "${SNAP_DIR}"
   argo="$(k -n argocd get app "ranker-$2" -o jsonpath='{.status.sync.status}/{.status.health.status}' 2>/dev/null || true)"
+  sync="$(k -n argocd get app "ranker-$2" -o json 2>/dev/null | jq -c '.status.operationState // {} | {revision: (.syncResult.revision // null), phase: (.phase // null), finishedAt: (.finishedAt // null), options: (.operation.sync.syncOptions // [])}' || echo '{}')"
   k8s="$(k version -o json 2>/dev/null | jq -r '.serverVersion.gitVersion // empty' || true)"
-  deploy_json "$2" | jq --arg argo "${argo}" --arg note "${3:-}" --arg k8s "${k8s}" \
-    '. + {_argo: $argo, _note: $note, _k8s: $k8s}' > "${SNAP_DIR}/$1.$2.json"
+  deploy_json "$2" | jq --arg argo "${argo}" --arg note "${3:-}" --arg k8s "${k8s}" --argjson sync "${sync:-{\}}" \
+    '. + {_argo: $argo, _note: $note, _k8s: $k8s, _sync: $sync}' > "${SNAP_DIR}/$1.$2.json"
 }
 
 # Print the managedFields table for the Deployment in namespace $1.
@@ -91,11 +111,19 @@ has_manager() { # ns manager
 
 git_sha() { git -C "${CHECKOUT_DIR}" log --format=%H --grep="^ranker $1\$" | head -1; }
 
-# Commit the given manifest version (v1|v2) to the bare repo; print the SHA.
+# Commit the given version (v1|v2) to the bare repo; print the SHA.
+#   v1: apps/ranker and apps/ranker-container both get manifests/v1
+#   v2: apps/ranker gets manifests/v2 (CPU limit deleted),
+#       apps/ranker-container gets manifests/v2-container (feature-cache deleted)
 git_publish() {
   local version="$1"
-  mkdir -p "${CHECKOUT_DIR}/apps/ranker"
+  mkdir -p "${CHECKOUT_DIR}/apps/ranker" "${CHECKOUT_DIR}/apps/ranker-container"
   cp "${ROOT}/manifests/${version}/deployment.yaml" "${CHECKOUT_DIR}/apps/ranker/deployment.yaml"
+  if [[ "${version}" == v1 ]]; then
+    cp "${ROOT}/manifests/v1/deployment.yaml" "${CHECKOUT_DIR}/apps/ranker-container/deployment.yaml"
+  else
+    cp "${ROOT}/manifests/v2-container/deployment.yaml" "${CHECKOUT_DIR}/apps/ranker-container/deployment.yaml"
+  fi
   git -C "${CHECKOUT_DIR}" add -A >/dev/null
   git -C "${CHECKOUT_DIR}" -c user.name=repro -c user.email=repro@example.invalid \
     commit -q --allow-empty -m "ranker ${version}"

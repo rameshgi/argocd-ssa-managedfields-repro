@@ -41,7 +41,7 @@ header p { margin: 2px 0; color: var(--muted); max-width: 900px; }
 /* ---------- timeline ---------- */
 .tl { margin: 18px 0 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 .tl-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: var(--surface); color: var(--text); padding: 5px 11px; font: inherit; font-size: 13px; cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
 .nav { display: flex; gap: 6px; align-items: center; }
@@ -147,23 +147,28 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
 <body>
 <div class="wrap">
   <header>
-    <h1>How a field deleted from Git silently survives an Argo CD sync</h1>
-    <p>Argo CD creates a Deployment with server-side apply. During an incident, on-call raises a CPU limit with kubectl. Later
-      the limit is deleted from Git, and Argo CD reports <b>Synced</b> while the cluster keeps the incident value. Click through
-      the timeline: each step makes one change, such as a kubectl command, an Argo CD sync, or a Git commit. Three
-      panels show the <b>manifest in Git</b>, the <b>object in the cluster</b>, and the <b>field managers</b> recorded in
-      <code>metadata.managedFields</code>. For Argo CD steps, the strip above them shows how Argo CD builds the desired state
-      and applies it. All data is real API-server output from the <a href="https://github.com/rameshgi/argocd-ssa-managedfields-repro">reproduction repo</a>.</p>
+    <h1>How a change deleted from Git silently survives an Argo CD sync</h1>
+    <p>Argo CD creates a Deployment with server-side apply. During an incident, someone changes it with kubectl: a CPU limit
+      (<code>demo-drift</code>) or a re-created container (<code>demo-container</code>). Later Git deletes what was changed,
+      Argo CD reports <b>Synced</b>, and the cluster keeps the change: <b>Argo CD's diff hides the drift</b>. Click through
+      the timeline one change at a time. Three panels show the <b>manifest in Git</b>, the <b>object in the cluster</b>, and
+      the <b>field managers</b> in <code>metadata.managedFields</code>. For Argo CD steps, the strip shows how Argo CD builds
+      the desired state and applies it. All data is real API-server output from the
+      <a href="https://github.com/rameshgi/argocd-ssa-managedfields-repro">test bed</a>.</p>
     <p class="small">Based on <a href="https://www.linkedin.com/blog/engineering/infrastructure/how-we-scale-deployments-with-a-custom-gitops-engine"><i>How we scale deployments with a custom GitOps engine</i></a>
-      by Ramesh G. Iyer (LinkedIn Engineering). <span id="versions"></span></p>
+      by Ramesh G. Iyer. The post attributes the loss of ownership to managedFields compaction. This test bed shows that
+      ownership moves earlier, when kubectl changes the value; compaction then hides who owns the field
+      (<code>demo-compacted</code>). <span id="versions"></span></p>
   </header>
 
   <section class="tl" aria-label="Timeline">
     <div class="tl-top">
       <div class="seg" role="group" aria-label="Namespace">
-        <button data-ns="drift" aria-pressed="true">demo-drift (bug)</button>
+        <button data-ns="drift" aria-pressed="true">demo-drift (field)</button>
         <button data-ns="resync" aria-pressed="false">demo-resync (control)</button>
         <button data-ns="compacted" aria-pressed="false">demo-compacted (owner hidden)</button>
+        <button data-ns="container" aria-pressed="false">demo-container (container)</button>
+        <button data-ns="put" aria-pressed="false">demo-put (PUT fix)</button>
       </div>
       <span class="hint">← → step · c switch namespace · click a manager to highlight its fields</span>
       <div class="nav"><button id="prev" aria-label="Previous step">← Prev</button><span class="pos" id="pos"></span><button id="next" aria-label="Next step">Next →</button></div>
@@ -194,57 +199,84 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
   const $ = id => document.getElementById(id);
   if (!D) { $("action").innerHTML = "<p>snapshots.js not found. Run <code>scripts/run-all.sh</code> first.</p>"; return; }
 
-  const AM = "argocd-controller", C = D.container, NS = D.namespaces;
+  const AM = "argocd-controller", C = D.container, SC = D.sidecar, NS = D.namespaces;
   const ARGO = "https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/";
   const K8S = "https://github.com/kubernetes/kubernetes/blob/v1.37.0/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/";
   const CK = n => `spec.template.spec.containers.{"name":"${n}"}`;
-  const FIELD = CK(C) + ".resources.limits.cpu";
+  const FIELD = CK(C) + ".resources.limits.cpu", ITEM = CK(SC);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const code = s => `<code>${esc(s)}</code>`;
   const alink = (path, line, text) => `<a href="${ARGO}${path}#L${line}">${esc(text)}</a>`;
   const mkey = m => m.manager + "|" + m.operation + "|" + (m.subresource || "");
   const mlabel = m => m.manager + (m.subresource ? " (" + m.subresource + ")" : "");
   const updates = s => s.managers.filter(m => m.operation === "Update");
+  const real = m => m.leaves.filter(l => !l.endsWith("."));
   const ownsPath = (m, key) => m.leaves.some(l => l === key || l.startsWith(key + "."));
-  const fOwners = s => s.managers.filter(m => ownsPath(m, FIELD));
+  const ownsItem = m => m.leaves.includes(ITEM + "..");
   const fVal = s => { const c = s.containers.find(x => x.name === C); return c && c.resources.limits && c.resources.limits.cpu; };
-  const ownStr = s => fOwners(s).map(mlabel).join(", ") || "nobody";
+  const hasSC = s => s.containers.some(x => x.name === SC);
+  const hhmmss = t => t ? t.replace(/^.*T/, "").replace(/Z$/, "") : "?";
+  const syncInfo = s => s.sync && s.sync.revision ? `Sync operation: revision ${code(s.sync.revision.slice(0, 8))}, ${esc(s.sync.phase)}, finished ${code(hhmmss(s.sync.finishedAt))}.` : "";
 
   if (D.argocd || D.k8s) $("versions").textContent = `Captured with Argo CD ${D.argocd || "?"} on Kubernetes ${D.k8s || "?"}.`;
+
+  // per-namespace focus: a field, or a container list item
+  const isCont = key => key === "container";
+  const focusOwners = (s, key) => s.managers.filter(m => isCont(key) ? ownsItem(m) : ownsPath(m, FIELD));
+  const focusLabel = key => isCont(key) ? `${SC} container` : `${C} limits.cpu`;
+  const ownStr = (s, key) => focusOwners(s, key).map(mlabel).join(", ") || "nobody";
 
   // ---------------- step sequence for a namespace ----------------
   function sequence(key) {
     const ns = NS[key];
     const by = id => D.snapshots.find(s => s.step === id && s.ns === ns);
     const verbs = D.snapshots.filter(s => s.ns === ns && /^3v-/.test(s.step)).map(s => s.step).sort();
-    const ids = ["1-argo-create", "2-incident", "3-resync", ...verbs, "4-git-v2", "5-argo-sync-v2", "6-put"];
+    const ids = ["1-argo-create", "2-incident", "2a-remove", "2b-readd", "3-resync", "3-day2", ...verbs, "4-git-v2", "5-argo-sync-v2", "6-put", "6-put-rid"];
     const out = [];
-    ids.forEach(id => { const s = by(id); if (s) out.push(describe(id, s, out.length ? out[out.length - 1].s : null, ns)); });
+    ids.forEach(id => { const s = by(id); if (s) out.push(describe(id, s, out.length ? out[out.length - 1].s : null, ns, key)); });
     return out;
   }
 
   // ---------------- what each step does ----------------
-  function describe(id, s, prev, ns) {
-    const st = { id, s, prev, ns, git: /^[456]/.test(id) ? "v2" : "v1" };
+  function describe(id, s, prev, ns, key) {
+    const st = { id, s, prev, ns, key, git: /^[456]/.test(id) ? (isCont(key) ? "v2c" : "v2") : "v1" };
     const v = fVal(s), pv = prev ? fVal(prev) : undefined;
-    const owners = fOwners(s).map(m => m.manager), argoOwns = owners.includes(AM);
+    const argoOwnsFocus = focusOwners(s, key).some(m => m.manager === AM);
+    const present = isCont(key) ? hasSC(s) : v != null;
     const argoE = s.managers.find(m => m.manager === AM && m.operation === "Apply");
+    const what = isCont(key) ? `the ${code(SC)} container` : code("limits.cpu");
     if (id === "1-argo-create") {
       Object.assign(st, { kind: "argo", phase: "Argo CD creates", flow: "on",
         title: `Argo CD creates the Deployment with ${code("ServerSideApply=true")}` });
       st.stages = [
-        { t: "1 · Render from Git", v: `manifests/v1 → limits.cpu ${v}`, c: "ok", d: `${code(C)}'s CPU limit is in Git.` },
-        { t: "2 · Desired state", v: "manifest + tracking-id", d: `Sent as a server-side apply PATCH by ${code(AM)}, with force-conflicts.` },
-        { t: "3 · API server", v: `${AM} owns ${argoE ? argoE.leaves.length : "?"} fields`, c: "ok", d: `Including ${code("limits.cpu")}. Owner: ${code(ownStr(s))}.` },
-        { t: "4 · Compare", v: s.argo || "?", c: "ok", d: "Live matches Git." },
+        { t: "1 · Render from Git", v: "manifests/v1", c: "ok", d: isCont(key) ? `Three containers, including ${code(SC)}.` : `${code(C)} limits.cpu ${esc(v)}.` },
+        { t: "2 · Desired state", v: "manifest + tracking-id", d: `Server-side apply PATCH by ${code(AM)}, with force-conflicts.` },
+        { t: "3 · API server", v: `${AM} owns ${argoE ? real(argoE).length : "?"} fields`, c: "ok", d: `Owner of ${what}: ${code(ownStr(s, key))}.` },
+        { t: "4 · Compare", v: s.argo || "?", c: "ok", d: syncInfo(s) || "Live matches Git." },
       ];
     } else if (id === "2-incident") {
       Object.assign(st, { kind: "kubectl", phase: "Incident", cmd: s.note, bad: true,
         title: `Incident: on-call raises ${code(C)}'s CPU limit with kubectl` });
       st.stages = [
         { t: "kubectl", v: `Update: limits.cpu ${pv} → ${v}`, d: "An imperative write is an Update operation." },
-        { t: "API server", v: `owner is now ${ownStr(s)}`, c: "bad", d: `An Update that changes a value takes ownership of that field. ${code(AM)} loses it.` },
+        { t: "API server", v: `owner is now ${ownStr(s, key)}`, c: "bad", d: `An Update that changes a value takes ownership of that field. ${code(AM)} loses it.` },
         { t: "Argo CD compare", v: s.argo || "?", c: "ok", d: `Correct so far: Git still says ${code(pv)}.` },
+      ];
+    } else if (id === "2a-remove") {
+      Object.assign(st, { kind: "kubectl", phase: "Incident", cmd: s.note,
+        title: `Incident: on-call removes the crash-looping ${code(SC)} container` });
+      st.stages = [
+        { t: "kubectl", v: "Update: container removed", d: "A JSON patch removes the list item." },
+        { t: "API server", v: "item and its ownership gone", c: "warn", d: `${code(AM)}'s claim on ${code(SC)} goes with it.` },
+        { t: "Argo CD compare", v: s.argo || "?", c: "ok", d: "Correct: Git still has the container." },
+      ];
+    } else if (id === "2b-readd") {
+      Object.assign(st, { kind: "kubectl", phase: "Incident", cmd: s.note, bad: true,
+        title: `…and adds ${code(SC)} back: a new list item, owned by kubectl` });
+      st.stages = [
+        { t: "kubectl", v: "Update: container added", d: "Same spec as Git." },
+        { t: "API server", v: `item owned by ${ownStr(s, key)}`, c: "bad", d: `Whoever creates a list item owns it. ${code(AM)} owns nothing in it.` },
+        { t: "Argo CD compare", v: s.argo || "?", c: "warn", d: "The spec matches Git, so there is nothing to report yet." },
       ];
     } else if (id === "3-resync") {
       Object.assign(st, { kind: "argo", phase: "Argo CD re-syncs", flow: "on",
@@ -252,67 +284,75 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
       st.stages = [
         { t: "1 · Render from Git", v: `manifests/v1 → limits.cpu ${v}`, c: "ok", d: "Git still has the CPU limit." },
         { t: "2 · Desired state", v: "manifest + tracking-id", d: `Server-side apply PATCH by ${code(AM)}.` },
-        { t: "3 · API server", v: `conflict → forced → ${ownStr(s)}`, c: "ok",
-          d: `Value ${code(pv)} → ${code(v)}. force-conflicts takes ownership back from ${code(fOwners(prev).map(m => m.manager).join(", "))}. ${alink("gitops-engine/pkg/utils/kube/resource_ops.go", "496", "resource_ops.go:496")}` },
-        { t: "4 · Compare", v: s.argo || "?", c: "ok", d: "Live matches Git again." },
+        { t: "3 · API server", v: `conflict → forced → ${ownStr(s, key)}`, c: "ok",
+          d: `Value ${code(pv)} → ${code(v)}. force-conflicts takes ownership back. ${alink("gitops-engine/pkg/utils/kube/resource_ops.go", "496", "resource_ops.go:496")}` },
+        { t: "4 · Compare", v: s.argo || "?", c: "ok", d: syncInfo(s) },
+      ];
+    } else if (id === "3-day2") {
+      Object.assign(st, { kind: "kubectl", phase: "Day-2 kubectl", cmd: s.note,
+        title: `Day-2 changes: ${code("replicas")} and two labels, declared in ${code("ignoreDifferences")}` });
+      st.stages = [
+        { t: "kubectl", v: "scale + label", d: "Externally managed fields that a deployment must not wipe." },
+        { t: "Argo CD", v: "ignoreDifferences", d: `This app declares ${code("/spec/replicas")}, ${code("/metadata/labels/team")}, ${code("/metadata/labels/cost-center")}.` },
       ];
     } else if (/^3v-/.test(id)) {
       const added = prev ? updates(s).filter(m => !prev.managers.some(x => mkey(x) === mkey(m))) : [];
       const merged = prev ? updates(prev).filter(m => !s.managers.some(x => mkey(x) === mkey(m))) : [];
       const compacted = merged.length > 0, n = updates(s).length;
       const actor = added.find(m => m.manager !== "ancient-changes" && m.manager !== "kube-controller-manager") || added[0];
+      const sim = actor && !/^kubectl/.test(actor.manager);
       Object.assign(st, { kind: "kubectl", phase: "Day-2 kubectl", cmd: s.note, bad: compacted,
         title: compacted ? `${code(actor ? mlabel(actor) : "kubectl")} is Update manager #${n + merged.length - 1}: the API server <b>compacts managedFields</b>`
                          : `${code(actor ? mlabel(actor) : "kubectl")} becomes Update manager #${n}` });
       st.stages = [
-        { t: "kubectl", v: actor ? `Update by ${mlabel(actor)}` : "Update", d: `It doesn't touch ${code("limits.cpu")}.` },
-        { t: "API server", v: actor ? `${mlabel(actor)} owns ${actor.leaves.length} field${actor.leaves.length === 1 ? "" : "s"}` : "fields recorded", d: "A new managedFields entry." },
+        { t: "kubectl", v: actor ? `Update by ${mlabel(actor)}` : "Update", d: `${sim ? "Simulated manager name, set with --field-manager. " : ""}It doesn't touch ${code("limits.cpu")}.` },
+        { t: "API server", v: actor ? `${mlabel(actor)} owns ${real(actor).length} field${real(actor).length === 1 ? "" : "s"}` : "fields recorded", d: "A new managedFields entry." },
         compacted
           ? { t: "Cap check · capmanagers.go", v: `${n + merged.length - 1} > 10 → merge oldest`, c: "bad",
-              d: `${merged.map(m => code(mlabel(m))).join(" + ")} merged into ${code("ancient-changes")}. The owner of ${code("limits.cpu")} is now ${code(ownStr(s))}: nobody can tell who set it. <a href="${K8S}capmanagers.go">source</a>` }
+              d: `${merged.map(m => code(mlabel(m))).join(" + ")} merged into ${code("ancient-changes")}. The owner of ${code("limits.cpu")} is now ${code(ownStr(s, key))}: nobody can tell who set it. <a href="${K8S}capmanagers.go">source</a>` }
           : { t: "Cap check · capmanagers.go", v: `${n} ≤ 10 → nothing happens`, c: n === 10 ? "warn" : "", d: `At most 10 Update entries are kept. <a href="${K8S}fieldmanager.go#L35">DefaultMaxUpdateManagers</a>` },
       ];
     } else if (id === "4-git-v2") {
+      const hidden = !argoOwnsFocus && present;
       const flipped = prev && /^OutOfSync/.test(prev.argo || "") && /^Synced/.test(s.argo || "");
-      Object.assign(st, { kind: "git", phase: "Git change", flow: "dry", bad: !argoOwns && v != null,
-        cmd: "git commit -m \"retriever: drop CPU limit\"   # manifests/v2",
-        title: !argoOwns && v != null
-          ? `Git deletes the CPU limit, and Argo CD flips to <b>Synced</b> without syncing`
-          : `Git deletes the CPU limit, and Argo CD reports <b>OutOfSync</b>` });
+      Object.assign(st, { kind: "git", phase: "Git change", flow: "dry", bad: hidden,
+        cmd: isCont(key) ? `git commit -m "remove ${SC} container"   # apps/ranker-container` : `git commit -m "retriever: drop CPU limit"   # apps/ranker`,
+        title: hidden ? `Git deletes ${what}, and Argo CD reports <b>Synced</b>` : `Git deletes ${what}, and Argo CD reports <b>OutOfSync</b>` });
       st.stages = [
-        { t: "1 · Git commit", v: "limits.cpu deleted", d: "Box 1 shows the change." },
-        { t: "2 · Render from Git", v: "manifests/v2 → no CPU limit", c: "ok", d: "Argo CD refreshes the app." },
-        { t: "3 · Server-side diff (dry run)", v: argoOwns ? "limits.cpu predicted removed" : `limits.cpu ${v} predicted to STAY`, c: argoOwns ? "ok" : "bad",
-          d: `A dry-run SSA of v2 keeps fields ${code(AM)} doesn't own. Owner: ${code(ownStr(s))}. ${alink("gitops-engine/pkg/diff/diff.go", "177", "diff.go:177")}, ${alink("gitops-engine/pkg/diff/diff.go", "286-L290", ":286-290")}` },
-        { t: "4 · Sync status", v: s.argo || "?", c: argoOwns ? "ok" : "bad",
-          d: argoOwns ? "The diff shows the deletion." : `${flipped ? "It was OutOfSync a step ago. " : ""}Predicted equals live, so the drift is invisible.` },
+        { t: "1 · Git commit", v: isCont(key) ? `${SC} deleted` : "limits.cpu deleted", d: "Box 1 shows the change." },
+        { t: "2 · Render from Git", v: isCont(key) ? "2 containers" : "no CPU limit", c: "ok", d: "Argo CD refreshes the app." },
+        { t: "3 · Server-side diff (dry run)", v: hidden ? "predicted to STAY" : "predicted removed", c: hidden ? "bad" : "ok",
+          d: `A dry-run server-side apply keeps what ${code(AM)} doesn't own. Owner: ${code(ownStr(s, key))}. ${alink("gitops-engine/pkg/diff/diff.go", "177", "diff.go:177")}` },
+        { t: "4 · Sync status", v: s.argo || "?", c: hidden ? "bad" : "ok",
+          d: hidden ? `${flipped ? "It was OutOfSync a step ago. " : ""}Predicted equals live, so the drift is invisible.` : "The diff shows the deletion." },
       ];
     } else if (id === "5-argo-sync-v2") {
-      const kept = v != null;
-      Object.assign(st, { kind: "argo", phase: "Argo CD sync", flow: "on", bad: kept,
-        title: kept ? `Argo CD syncs v2: the sync succeeds, and the CPU limit <b>stays</b>` : `Argo CD syncs v2: the CPU limit is removed` });
+      Object.assign(st, { kind: "argo", phase: "Argo CD sync", flow: "on", bad: present,
+        title: present ? `Argo CD syncs: the sync succeeds, and ${what} <b>stays</b>` : `Argo CD syncs: ${what} is removed` });
       st.stages = [
-        { t: "1 · Render from Git", v: "manifests/v2 → no CPU limit", c: "ok", d: "The desired state has no limits.cpu." },
+        { t: "1 · Render from Git", v: isCont(key) ? "2 containers" : "no CPU limit", c: "ok", d: "The desired state." },
         { t: "2 · Desired state", v: "manifest + tracking-id", d: `Server-side apply PATCH by ${code(AM)}. ${alink("gitops-engine/pkg/sync/sync_context.go", "1485", "sync_context.go:1485")}` },
-        { t: "3 · API server", v: kept ? `limits.cpu ${v} KEPT` : "limits.cpu deleted", c: kept ? "bad" : "ok",
-          d: `A field is deleted only if the applier owns it. Owner before: ${code(prev ? ownStr(prev) : "?")}.` },
-        { t: "4 · Compare", v: s.argo || "?", c: kept ? "bad" : "ok", d: kept ? `Synced, with limits.cpu ${v} live and not in Git.` : "Live matches Git." },
+        { t: "3 · API server", v: present ? "KEPT" : "deleted", c: present ? "bad" : "ok",
+          d: `Deleted only if the applier owns it. Owner before: ${code(prev ? ownStr(prev, key) : "?")}.${present ? ` ${code(AM)}'s timestamp doesn't move: nothing changed.` : ""}` },
+        { t: "4 · Compare", v: s.argo || "?", c: present ? "bad" : "ok", d: `${syncInfo(s)} ${present ? "Live no longer matches Git." : "Live matches Git."}` },
       ];
-    } else if (id === "6-put") {
-      const lost = [];
+    } else if (id === "6-put" || id === "6-put-rid") {
+      const rid = id === "6-put-rid", lost = [], kept = [];
       if (prev) {
-        if (prev.replicas !== s.replicas) lost.push(`replicas ${prev.replicas}→${s.replicas}`);
-        Object.keys(prev.labels).filter(k => !(k in s.labels)).forEach(k => lost.push(`label ${k}`));
+        (prev.replicas !== s.replicas ? lost : kept).push(`replicas ${prev.replicas}${prev.replicas !== s.replicas ? "→" + s.replicas : ""}`);
+        Object.keys(prev.labels).filter(k => k !== "app").forEach(k => (k in s.labels ? kept : lost).push(`label ${k}`));
         const anns = Object.keys(prev.annotations).filter(k => !(k in s.annotations));
         if (anns.length) lost.push(`${anns.length} annotations`);
       }
-      Object.assign(st, { kind: "argo", phase: "PUT instead", flow: "on",
-        title: `The same sync as a <b>PUT</b> (${code("Replace=true")}): the CPU limit is gone` });
+      Object.assign(st, { kind: "argo", phase: rid ? "PUT + RespectIgnoreDifferences" : "PUT instead", flow: "on",
+        title: rid ? `PUT with declared external fields (${code("Replace=true")} + ${code("RespectIgnoreDifferences=true")})`
+                   : `The same sync as a <b>PUT</b> (${code("Replace=true")}): the CPU limit is gone` });
       st.stages = [
-        { t: "1 · Render from Git", v: "manifests/v2 → no CPU limit", c: "ok", d: "Same as before." },
-        { t: "2 · Desired state", v: "manifest as written", c: "warn", d: "Replace=true does not copy externally managed fields from the live object." },
-        { t: "3 · PUT", v: "object := desired", c: "ok", d: "Full replacement. managedFields are not consulted." },
-        { t: "4 · Result", v: "limits.cpu removed", c: "ok", d: `Also wiped: ${lost.map(code).join(", ") || "nothing"}. A PUT-based sync should copy declared external fields from live first, as the blog's engine does.` },
+        { t: "1 · Render from Git", v: "no CPU limit", c: "ok", d: "Same as before." },
+        rid ? { t: "2 · Desired state", v: "manifest + declared live fields", c: "ok", d: `RespectIgnoreDifferences copies the live values of ignoreDifferences fields into the target. ${alink("controller/sync.go", "310", "sync.go:310")}` }
+            : { t: "2 · Desired state", v: "manifest as written", c: "warn", d: "No externally managed fields are copied from the live object." },
+        { t: "3 · PUT", v: "object := desired", c: "ok", d: `Full replacement; managedFields not consulted. No resourceVersion is sent for this kind. ${alink("gitops-engine/pkg/sync/sync_context.go", "1469-L1479", "sync_context.go:1469")}` },
+        { t: "4 · Result", v: "limits.cpu removed", c: lost.length ? "warn" : "ok", d: `${kept.length ? "Kept: " + kept.map(code).join(", ") + ". " : ""}${lost.length ? "Wiped: " + lost.map(code).join(", ") + "." : ""}` },
       ];
     }
     return st;
@@ -340,11 +380,16 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
     add(2, "spec:", "s:spec.template.spec"); add(3, "containers:", "s:containers");
     s.containers.forEach(c => {
       const ck = CK(c.name);
-      add(3, `- name: ${c.name}`, ck + ".name");
-      add(4, `image: ${c.image}`, ck + ".image");
-      add(4, "resources:", "s:" + ck + ".resources");
+      add(3, `- name: ${c.name}`, ck, { head: c.name });
+      add(4, `image: ${c.image}`, ck + ".image", { c: c.name });
+      if (c.env && c.env.length) {
+        add(4, "env:", "s:" + ck + ".env", { c: c.name });
+        c.env.forEach(e => add(5, `- {name: ${e.name}, value: ${e.value}}`, `${ck}.env.{"name":"${e.name}"}`, { c: c.name }));
+      }
+      add(4, "resources:", "s:" + ck + ".resources", { c: c.name });
       mapBlock(5, "requests", c.resources.requests, ck + ".resources.requests");
       mapBlock(5, "limits", c.resources.limits, ck + ".resources.limits");
+      L.forEach(x => { if (x.key.startsWith(ck) || x.key.startsWith("s:" + ck)) x.c = c.name; });
     });
     return L;
   }
@@ -369,7 +414,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
   let seq = [];
   try {
     const h = /step=(\d+)/.exec(location.hash); if (h) state.i = +h[1] - 1;
-    const n = /ns=(drift|resync|compacted)/.exec(location.hash); if (n) state.key = n[1];
+    const n = /ns=(drift|resync|compacted|container|put)/.exec(location.hash); if (n) state.key = n[1];
   } catch (e) {}
 
   function buildTrack() {
@@ -394,7 +439,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
   function setNs(key) {
     if (key === state.key || !NS[key]) return;
     const cur = seq[state.i] && seq[state.i].id;
-    state.key = key; seq = sequence(key); buildTrack();
+    state.key = key; state.sel = null; seq = sequence(key); buildTrack();
     let j = seq.findIndex(s => s.id === cur);
     if (j < 0) j = seq.findIndex(s => s.id === "4-git-v2") - 1;
     state.i = Math.max(0, j); render();
@@ -402,14 +447,13 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
 
   function render() {
     state.i = Math.max(0, Math.min(seq.length - 1, state.i));
-    const st = seq[state.i], s = st.s, prev = st.prev;
+    const st = seq[state.i], s = st.s, prev = st.prev, key = st.key;
     [...$("track").querySelectorAll(".tick")].forEach((b, i) => { if (i === state.i) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current"); });
     $("prev").disabled = state.i === 0; $("next").disabled = state.i === seq.length - 1;
     $("pos").textContent = `${state.i + 1} / ${seq.length}`;
     document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.ns === state.key)));
     try { history.replaceState(null, "", `#step=${state.i + 1}&ns=${state.key}`); } catch (e) {}
 
-    // action strip
     const whoTxt = { kubectl: "kubectl", argo: "Argo CD", git: "Git" }[st.kind];
     $("action").innerHTML = `<h2><span class="who ${st.kind}">${whoTxt}</span>Step ${state.i + 1}: ${st.title}</h2>
       ${st.cmd ? `<code class="cmd">$ ${esc(st.cmd)}</code>` : ""}
@@ -421,48 +465,58 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
     $("flow-l").textContent = st.flow === "on" ? "Argo CD applies" : st.flow === "dry" ? "dry run only" : "not involved";
 
     // box 1: Git manifest (v2 shown as a diff against v1)
-    const g1 = D.manifests.v1.replace(/\n+$/, "").split("\n"), g2 = D.manifests.v2.replace(/\n+$/, "").split("\n");
+    const g1 = D.manifests.v1.replace(/\n+$/, "").split("\n");
     let no = 0;
-    $("git").innerHTML = st.git === "v1" ? g1.map(t => line(++no, t, "")).join("")
-      : diff(g1, g2, x => x).map(d => d.st === "del" ? line("−", d.l, "gitdel") : line(++no, d.l, d.st === "add" ? "gitadd" : "")).join("");
-    $("git-sub").innerHTML = `${code("manifests/" + st.git + "/deployment.yaml")}${st.git === "v2" ? ` · <span style="color:var(--warn)">${esc(C)} CPU limit deleted</span>` : ` · ${esc(C)} limits.cpu ${esc(fVal(seq[0].s))}`}`;
+    if (st.git === "v1") $("git").innerHTML = g1.map(t => line(++no, t, "")).join("");
+    else {
+      const g2 = D.manifests[st.git].replace(/\n+$/, "").split("\n");
+      $("git").innerHTML = diff(g1, g2, x => x).map(d => d.st === "del" ? line("−", d.l, "gitdel") : line(++no, d.l, d.st === "add" ? "gitadd" : "")).join("");
+    }
+    const path = isCont(key) ? "apps/ranker-container" : "apps/ranker";
+    $("git-sub").innerHTML = `${code(path)} @ ${code(st.git === "v1" ? "v1" : "v2")}${st.git !== "v1" ? ` · <span style="color:var(--warn)">${esc(focusLabel(key))} deleted</span>` : ""}`;
 
     // box 2: live object, diffed against the previous step
     const cur = objLines(s), old = prev ? objLines(prev) : cur;
     const sel = state.sel && s.managers.find(m => mkey(m) === state.sel);
+    const gitGone = st.git !== "v1";
     let ln = 0;
     $("live").innerHTML = diff(old, cur, x => x.key).map(d => {
-      const l = d.l, real = !l.key.startsWith("s:"), isF = l.key === FIELD;
-      const owners = real ? s.managers.filter(m => ownsPath(m, l.key)).map(mlabel) : [];
+      const l = d.l, realKey = !l.key.startsWith("s:");
+      const isF = isCont(key) ? l.c === SC : l.key === FIELD;
+      const owners = realKey ? s.managers.filter(m => ownsPath(m, l.key)).map(mlabel) : [];
       let cls = d.st === "del" ? "del" : d.st === "add" && prev ? "add" : (d.p && d.p.text !== l.text ? "chg" : "");
-      if (d.st !== "del" && isF) cls += st.git === "v2" ? " zombie" : " focus";
-      if (sel && d.st !== "del") cls += real && ownsPath(sel, l.key) ? " own" : " dim";
-      const tags = (d.st !== "del" && isF && st.git === "v2" ? `<span class="tag">not in Git</span>` : "") +
-        (d.st !== "del" && isF ? `<span class="who-own">← owned by ${esc(owners.join(", ") || "nobody")}</span>` : "") +
+      if (d.st !== "del" && isF) cls += gitGone ? " zombie" : " focus";
+      if (sel && d.st !== "del") cls += realKey && ownsPath(sel, l.key) ? " own" : " dim";
+      const headLine = isCont(key) ? l.head === SC : l.key === FIELD;
+      const itemOwners = isCont(key) ? focusOwners(s, key).map(mlabel) : owners;
+      const tags = (d.st !== "del" && headLine && gitGone ? `<span class="tag">not in Git</span>` : "") +
+        (d.st !== "del" && headLine ? `<span class="who-own">← owned by ${esc(itemOwners.join(", ") || "nobody")}</span>` : "") +
         (d.st === "del" ? `<span class="tag">removed</span>` : "");
       const txt = "  ".repeat(l.ind) + (l.cmt ? `<span class="cmt">${esc(l.text)}</span>` : esc(l.text));
-      return `<div class="ln ${cls}" title="${esc(real ? (owners.length ? "owned by: " + owners.join(", ") : "no recorded owner") : "")}"><span class="no">${d.st === "del" ? "" : ++ln}</span><span class="tx">${txt}${tags}</span></div>`;
+      return `<div class="ln ${cls}" title="${esc(realKey ? (owners.length ? "owned by: " + owners.join(", ") : "no recorded owner") : "")}"><span class="no">${d.st === "del" ? "" : ++ln}</span><span class="tx">${txt}${tags}</span></div>`;
     }).join("");
-    const writer = st.kind === "kubectl" ? "written by kubectl" : st.kind === "git" ? "not written (Argo CD only ran a dry run)" : st.id === "6-put" ? "written by Argo CD (PUT)" : "written by Argo CD (server-side apply)";
-    const v = fVal(s);
-    $("live-sub").innerHTML = `${code(st.ns + "/ranker")} · ${esc(writer)} · Argo CD: <b>${esc(s.argo || "n/a")}</b> · ${esc(C)} limits.cpu: <b style="color:${st.git === "v2" && v ? "var(--bad)" : "inherit"}">${esc(v || "none")}</b>`;
+    const writer = st.kind === "kubectl" ? "written by kubectl" : st.kind === "git" ? "not written (Argo CD only ran a dry run)" : /^6-put/.test(st.id) ? "written by Argo CD (PUT)" : "written by Argo CD (server-side apply)";
+    const fv = isCont(key) ? (hasSC(s) ? "running" : "none") : (fVal(s) || "none");
+    const fvBad = gitGone && fv !== "none";
+    $("live-sub").innerHTML = `${code(st.ns + "/ranker")} · ${esc(writer)} · Argo CD: <b>${esc(s.argo || "n/a")}</b> · ${esc(focusLabel(key))}: <b style="color:${fvBad ? "var(--bad)" : "inherit"}">${esc(fv)}</b>`;
 
     // box 3: managers
     const n = updates(s).length;
     const gone = prev ? prev.managers.filter(m => !s.managers.some(x => mkey(x) === mkey(m))) : [];
     const compacted = /^3v-/.test(st.id) && gone.some(m => m.operation === "Update");
-    const max = Math.max(...D.snapshots.filter(x => x.ns === st.ns).flatMap(x => x.managers.map(m => m.leaves.length)), 1);
+    const max = Math.max(...D.snapshots.filter(x => x.ns === st.ns).flatMap(x => x.managers.map(m => real(m).length)), 1);
     const slots = Array.from({ length: 11 }, (_, k) => (k === 10 ? '<span class="capbar" title="cap: 10"></span>' : "") +
       `<span class="slot ${compacted && k === 10 ? "over" : k < n ? "on" : ""}"></span>`).join("");
+    const ownsF = m => isCont(key) ? ownsItem(m) : ownsPath(m, FIELD);
+    const short = isCont(key) ? `owns ${SC}` : "owns limits.cpu";
     const rowHtml = (m, ghost) => {
       const pm = prev && prev.managers.find(x => mkey(x) === mkey(m));
-      const tot = m.leaves.length, owns = ownsPath(m, FIELD), owned = pm && ownsPath(pm, FIELD);
+      const tot = real(m).length, owns = ownsF(m), owned = pm && ownsF(pm);
       let delta = "";
       if (!ghost && prev && !pm) delta = '<span class="delta new">new</span>';
-      else if (!ghost && pm && pm.leaves.length !== tot) delta = `<span class="delta ${tot > pm.leaves.length ? "up" : "down"}">${tot > pm.leaves.length ? "+" : ""}${tot - pm.leaves.length}</span>`;
-      const why = ghost ? (/^3v-/.test(st.id) ? "merged into ancient-changes" : st.id === "6-put" ? "its fields were wiped by the PUT" : "no longer owns any field") : "";
-      const badge = !ghost && owns ? '<span class="ownbadge">owns limits.cpu</span>'
-        : !ghost && owned ? '<span class="delta down">lost limits.cpu</span>' : "";
+      else if (!ghost && pm && real(pm).length !== tot) delta = `<span class="delta ${tot > real(pm).length ? "up" : "down"}">${tot > real(pm).length ? "+" : ""}${tot - real(pm).length}</span>`;
+      const why = ghost ? (/^3v-/.test(st.id) ? "merged into ancient-changes" : /^6-put/.test(st.id) ? "its fields were wiped by the PUT" : "no longer owns any field") : "";
+      const badge = !ghost && owns ? `<span class="ownbadge">${esc(short)}</span>` : !ghost && owned ? `<span class="delta down">lost it</span>` : "";
       return `<button class="mgr${ghost ? " ghost" : ""}" ${ghost ? "disabled" : `aria-pressed="${state.sel === mkey(m)}"`} data-k="${esc(mkey(m))}">
         <span class="nm">${esc(m.manager)}${delta}${badge}</span><span class="op">${esc(m.operation)}${m.subresource ? " · " + esc(m.subresource) : ""}${m.time ? "" : " · no time"}</span>
         <span class="bar"><i class="${owns ? "fc" : ""}" style="width:${(tot / max) * 100}%"></i></span>
@@ -473,8 +527,9 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
       <div class="meter-l">${n} Update managers (max 10)${compacted ? " · hit 11, merged back to 10" : ""} · Apply entries are not capped</div>
       ${s.managers.map(m => rowHtml(m, false)).join("")}${gone.map(m => rowHtml(m, true)).join("")}
       <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>fields owned</span>
-        <span><span class="sw" style="background:var(--bad)"></span>owns ${esc(C)}'s limits.cpu</span><span>click a manager to highlight its fields in box 2</span></div>`;
-    $("mgr-sub").innerHTML = `owner of ${code(C + " limits.cpu")}: <b>${esc(v ? ownStr(s) : "— (field absent)")}</b>`;
+        <span><span class="sw" style="background:var(--bad)"></span>${esc(short)}</span><span>click a manager to highlight its fields in box 2</span></div>`;
+    const present = isCont(key) ? hasSC(s) : fVal(s) != null;
+    $("mgr-sub").innerHTML = `owner of ${code(focusLabel(key))}: <b>${esc(present ? ownStr(s, key) : "— (absent)")}</b>`;
     $("mgrs").querySelectorAll(".mgr:not(.ghost)").forEach(b => b.addEventListener("click", () => {
       state.sel = state.sel === b.dataset.k ? null : b.dataset.k; render();
     }));
@@ -484,7 +539,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; border-top: 1
   $("prev").onclick = () => go(state.i - 1);
   $("next").onclick = () => go(state.i + 1);
   document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => setNs(b.dataset.ns)));
-  const order = ["drift", "resync", "compacted"];
+  const order = ["drift", "resync", "compacted", "container", "put"];
   document.addEventListener("keydown", e => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.key === "ArrowRight") go(state.i + 1);
