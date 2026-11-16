@@ -89,7 +89,7 @@ step_md 2 "Incident: on-call raises the CPU limit with kubectl" "$(snap 2-incide
 field to \`kubectl-set\`. \`${ARGO_MANAGER}\` no longer owns it. Argo CD correctly reports **OutOfSync**, because Git
 still says \`500m\`."
 
-step_md 3 "Git deletes the CPU limit, and Argo CD flips to Synced *without syncing*" "$(snap 4-git-v2 "$D")" v2 \
+step_md 3 "Git deletes the CPU limit, and Argo CD flips to Synced without syncing" "$(snap 4-git-v2 "$D")" v2 \
 "The team deletes \`retriever\`'s CPU limit from Git (\`manifests/v2\`). Argo CD's server-side diff
 ([\`diff.go:177\`](${ARGO}gitops-engine/pkg/diff/diff.go#L177)) runs a dry-run server-side apply of v2. That dry run
 keeps every field \`${ARGO_MANAGER}\` doesn't own, so it predicts \`limits.cpu: 2\` stays. The prediction equals live,

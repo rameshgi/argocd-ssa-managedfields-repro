@@ -189,7 +189,7 @@ still says `500m`.
 </details>
 
 <details>
-<summary><b>Step 3 · Git deletes the CPU limit, and Argo CD flips to Synced *without syncing*</b> — Argo CD: <code>Synced/Healthy</code> · live <code>limits.cpu</code>: <code>2</code></summary>
+<summary><b>Step 3 · Git deletes the CPU limit, and Argo CD flips to Synced without syncing</b> — Argo CD: <code>Synced/Healthy</code> · live <code>limits.cpu</code>: <code>2</code></summary>
 
 The team deletes `retriever`'s CPU limit from Git (`manifests/v2`). Argo CD's server-side diff
 ([`diff.go:177`](https://github.com/argoproj/argo-cd/blob/94037c4d4e1af4bd0651d37a179fbd9e347e668c/gitops-engine/pkg/diff/diff.go#L177)) runs a dry-run server-side apply of v2. That dry run
